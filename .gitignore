@@ -1,0 +1,13 @@
+.oc
+.DS_Store
+.claude
+.vscode
+.cursor
+Backend/CLAUDE.md
+Backend/database_test.sqlite
+Backend/node_modules/
+Backend/coverage/
+Frontend/CLAUDE.md
+Frontend/node_modules
+Frontend/coverage
+Frontend/.idea
