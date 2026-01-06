@@ -3,13 +3,7 @@ export let PREVIOUS_LOCATION = "";
 
 // we use a class so as to test its methods in e2e tests
 export default class Login {
-  constructor({
-    document,
-    localStorage,
-    onNavigate,
-    PREVIOUS_LOCATION,
-    store,
-  }) {
+  constructor({ document, localStorage, onNavigate, PREVIOUS_LOCATION, store }) {
     this.document = document;
     this.localStorage = localStorage;
     this.onNavigate = onNavigate;
@@ -36,8 +30,12 @@ export default class Login {
       status: "connected",
     };
     this.localStorage.setItem("user", JSON.stringify(user));
+    this.localStorage.removeItem("jwt");
     this.login(user)
-      .catch((error) => error ? this.createUser(user) : null)
+      .catch((error) => {
+        this.localStorage.removeItem("jwt");
+        return error ? this.createUser(user) : null;
+      })
       .then(() => {
         this.onNavigate(ROUTES_PATH["Bills"]);
         this.PREVIOUS_LOCATION = ROUTES_PATH["Bills"];
@@ -57,13 +55,17 @@ export default class Login {
     };
 
     this.localStorage.setItem("user", JSON.stringify(user));
+    this.localStorage.removeItem("jwt");
     this.login(user)
-      .catch((error) => error ? this.createUser(user) : null)
+      .catch((error) => {
+        this.localStorage.removeItem("jwt");
+        return error ? this.createUser(user) : null;
+      })
       .then(() => {
         this.onNavigate(ROUTES_PATH["Dashboard"]);
         this.PREVIOUS_LOCATION = ROUTES_PATH["Dashboard"];
         PREVIOUS_LOCATION = this.PREVIOUS_LOCATION;
-        document.body.style.backgroundColor = "#fff";
+        this.document.body.style.backgroundColor = "#fff";
       });
   };
 
@@ -78,7 +80,7 @@ export default class Login {
           }),
         )
         .then(({ jwt }) => {
-          localStorage.setItem("jwt", jwt);
+          this.localStorage.setItem("jwt", jwt);
         });
     } else {
       return null;

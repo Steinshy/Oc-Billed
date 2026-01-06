@@ -1,9 +1,4 @@
 import "./datepicker.js";
 import Router from "./Router.js";
 
-const App = () => {
-  Router();
-};
-
-export default App;
-
+Router().catch(error => console.error("Failed to initialize router:", error));

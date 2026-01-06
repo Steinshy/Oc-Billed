@@ -16,10 +16,17 @@ export const filteredBills = (data, status) => {
         } else {
         /* istanbul ignore next */
           // in prod environment
-          const userEmail = JSON.parse(localStorage.getItem("user")).email;
-          selectCondition =
-            bill.status === status &&
-            ![...USERS_TEST, userEmail].includes(bill.email);
+          const user = JSON.parse(localStorage.getItem("user"));
+          const userEmail = user.email;
+          const isAdmin = user.type === "Admin";
+
+          if (isAdmin) {
+            selectCondition = bill.status === status && !USERS_TEST.includes(bill.email);
+          } else {
+            selectCondition =
+              bill.status === status &&
+              ![...USERS_TEST, userEmail].includes(bill.email);
+          }
         }
 
         return selectCondition;
