@@ -46,17 +46,16 @@ export default class Login {
       });
   };
 
-  handleSubmitAdmin = (e) => {
-    e.preventDefault();
+  // Bug 2 - Login : Corriger le handler de submit administrateur
+  handleSubmitAdmin = event => {
+    event.preventDefault();
     const user = {
       type: "Admin",
-      email: e.target.querySelector("input[data-testid=\"employee-email-input\"]")
-        .value,
-      password: e.target.querySelector(
-        "input[data-testid=\"employee-password-input\"]",
-      ).value,
+      email: event.target.querySelector('input[data-testid="admin-email-input"]').value,
+      password: event.target.querySelector('input[data-testid="admin-password-input"]').value,
       status: "connected",
     };
+
     this.localStorage.setItem("user", JSON.stringify(user));
     this.login(user)
       .catch((error) => error ? this.createUser(user) : null)
