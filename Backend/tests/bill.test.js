@@ -2,6 +2,8 @@ const request = require("supertest");
 const app = require("../app");
 const jwt = require("../services/jwt");
 
+const TEST_BILL_ID = "47qAXb6fIm2zOKkLzMrb";
+
 const jwtValueAdmin = jwt.encrypt({
   userId: 1,
   email: "john-doe@domain.tld",
@@ -13,34 +15,23 @@ const jwtValue = jwt.encrypt({
 
 describe("Test the root path", () => {
   test("It should response the GET method", () => {
-    return request(app)
-      .get("/bills")
-      .set("Authorization", `Bearer ${jwtValue}`)
-      .expect(200);
+    return request(app).get("/bills").set("Authorization", `Bearer ${jwtValue}`).expect(200);
   });
 
   test("It should return unauthenticated error for list bills", () => {
-    return request(app)
-      .get("/bills")
-      .expect(401);
+    return request(app).get("/bills").expect(401);
   });
 
   test("It should return unauthenticated error for create bill", () => {
-    return request(app)
-      .post("/bills")
-      .expect(401);
+    return request(app).post("/bills").expect(401);
   });
 
   test("It should return unauthenticated error for update bill", () => {
-    return request(app)
-      .patch("/bills/47qAXb6fIm2zOKkLzMrb")
-      .expect(401);
+    return request(app).patch(`/bills/${TEST_BILL_ID}`).expect(401);
   });
 
   test("It should return unauthenticated error for delete bill", () => {
-    return request(app)
-      .delete("/bills/47qAXb6fIm2zOKkLzMrb")
-      .expect(401);
+    return request(app).delete(`/bills/${TEST_BILL_ID}`).expect(401);
   });
 
   test("It should list all bills as admin", () => {
@@ -48,9 +39,9 @@ describe("Test the root path", () => {
       .get("/bills")
       .set("Authorization", `Bearer ${jwtValueAdmin}`)
       .expect(200)
-      .then((response) => {
+      .then(response => {
         expect(response.body).toContainEqual({
-          id: "47qAXb6fIm2zOKkLzMrb",
+          id: TEST_BILL_ID,
           vat: "80",
           status: "pending",
           type: "bill type",
@@ -72,7 +63,7 @@ describe("Test the root path", () => {
       .get("/bills")
       .set("Authorization", `Bearer ${jwtValue}`)
       .expect(200)
-      .then((response) => {
+      .then(response => {
         expect(response.body).not.toContainEqual({
           id: "47qAXb6fIm2zOKkLzMro",
           vat: "80",
@@ -93,12 +84,12 @@ describe("Test the root path", () => {
 
   test("It should return a specific bill as admin", () => {
     return request(app)
-      .get("/bills/47qAXb6fIm2zOKkLzMrb")
+      .get("`/bills/${TEST_BILL_ID}`")
       .set("Authorization", `Bearer ${jwtValueAdmin}`)
       .expect(200)
-      .then((response) => {
+      .then(response => {
         expect(response.body).toEqual({
-          id: "47qAXb6fIm2zOKkLzMrb",
+          id: TEST_BILL_ID,
           vat: "80",
           status: "pending",
           type: "bill type",
@@ -127,8 +118,8 @@ describe("Test the root path", () => {
       .post("/bills")
       .set("Authorization", `Bearer ${jwtValue}`)
       .set("Accept", "multipart/form-data")
-      .field('name','bill-name')
-      .attach('file', 'tests/fixture-cat.jpg')
+      .field("name", "bill-name")
+      .attach("file", "tests/fixture-cat.jpg")
       .expect(201);
   });
 
@@ -137,11 +128,11 @@ describe("Test the root path", () => {
       .post("/bills")
       .set("Authorization", `Bearer ${jwtValue}`)
       .set("Accept", "multipart/form-data")
-      .field('name','bill-name')
-      .attach('file', 'tests/fixture-cat.pdf')
-      .then((response) => {
+      .field("name", "bill-name")
+      .attach("file", "tests/fixture-cat.pdf")
+      .then(response => {
         expect(response.body).toMatchObject({
-          name: 'bill-name',
+          name: "bill-name",
           fileName: false,
           filePath: false,
         });
@@ -150,7 +141,7 @@ describe("Test the root path", () => {
 
   test("It should update a bill as admin", () => {
     return request(app)
-      .patch("/bills/47qAXb6fIm2zOKkLzMrb")
+      .patch("`/bills/${TEST_BILL_ID}`")
       .set("Authorization", `Bearer ${jwtValueAdmin}`)
       .send({ name: "bill-name" })
       .set("Accept", "application/json")
@@ -168,7 +159,7 @@ describe("Test the root path", () => {
 
   test("It should delete a bill as admin", () => {
     return request(app)
-      .delete("/bills/47qAXb6fIm2zOKkLzMrb")
+      .delete("`/bills/${TEST_BILL_ID}`")
       .set("Authorization", `Bearer ${jwtValueAdmin}`)
       .set("Accept", "application/json")
       .expect(200);

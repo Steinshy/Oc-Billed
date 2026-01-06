@@ -1,0 +1,45 @@
+codecov:
+  require_ci_to_pass: false
+  notify:
+    wait_for_ci: true
+  token: ${{ secrets.CODECOV_TOKEN }}
+
+coverage:
+  precision: 2
+  round: down
+  range: "70...100"
+
+  status:
+    project:
+      default:
+        target: 70%
+        threshold: 1%
+        base: auto
+        branches:
+          - dev
+        flags:
+          - unit-tests
+    patch:
+      default:
+        target: 70%
+        threshold: 1%
+        base: auto
+        branches:
+          - dev
+        flags:
+          - unit-tests
+
+flags:
+  unit-tests:
+    paths:
+      - src/
+    carryforward: true
+
+ignore:
+  - "public/**"
+  - "database/**"
+
+comment:
+  layout: "reach,diff,flags,tree,reach"
+  behavior: default
+  require_changes: false

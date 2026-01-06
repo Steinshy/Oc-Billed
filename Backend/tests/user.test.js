@@ -1,7 +1,11 @@
 const request = require("supertest");
 const app = require("../app");
 const jwt = require("../services/jwt");
-const fixtures = require('./fixtures')
+const fixtures = require("./fixtures");
+
+const UNAUTHENTICATE_ERROR_TEXT = "unauthenticate error";
+const TEST_USER_ID = "73WakrfVbNJBaAmhQtEeDv";
+const USERS_PATH = "/users";
 
 const jwtValueAdmin = jwt.encrypt({
   userId: 1,
@@ -14,38 +18,29 @@ const jwtValue = jwt.encrypt({
 
 describe("Test the root path", () => {
   test("It should response the GET method", () => {
-    return request(app)
-      .get("/users")
-      .set("Authorization", `Bearer ${jwtValue}`)
-      .expect(200);
+    return request(app).get(USERS_PATH).set("Authorization", `Bearer ${jwtValue}`).expect(200);
   });
 
-  test("It should return unauthenticate error for list user", () => {
-    return request(app)
-      .get("/users/73WakrfVbNJBaAmhQtEeDv")
-      .expect(401);
+  test(`It should return ${UNAUTHENTICATE_ERROR_TEXT} for list user`, () => {
+    return request(app).get(`${USERS_PATH}/${TEST_USER_ID}`).expect(401);
   });
 
-  test("It should return unauthenticate error for update user", () => {
-    return request(app)
-      .patch("/users/73WakrfVbNJBaAmhQtEeDv")
-      .expect(401);
+  test(`It should return ${UNAUTHENTICATE_ERROR_TEXT} for update user`, () => {
+    return request(app).patch(`${USERS_PATH}/${TEST_USER_ID}`).expect(401);
   });
 
-  test("It should return unauthenticate error for delete user", () => {
-    return request(app)
-      .delete("/users/73WakrfVbNJBaAmhQtEeDv")
-      .expect(401);
+  test(`It should return ${UNAUTHENTICATE_ERROR_TEXT} for delete user`, () => {
+    return request(app).delete(`${USERS_PATH}/${TEST_USER_ID}`).expect(401);
   });
 
   test("It should get a list of users", () => {
     return request(app)
-      .get("/users")
+      .get(USERS_PATH)
       .set("Authorization", `Bearer ${jwtValue}`)
       .expect(200)
-      .then((response) => {
+      .then(response => {
         expect(response.body).toContainEqual({
-          id: "73WakrfVbNJBaAmhQtEeDv",
+          id: TEST_USER_ID,
           name: "john-doe",
           type: "Admin",
           email: "john-doe@domain.tld",
@@ -56,12 +51,12 @@ describe("Test the root path", () => {
 
   test("It should get a specific user", () => {
     return request(app)
-      .get("/users/73WakrfVbNJBaAmhQtEeDv")
+      .get(`${USERS_PATH}/${TEST_USER_ID}`)
       .set("Authorization", `Bearer ${jwtValue}`)
       .expect(200)
-      .then((response) => {
+      .then(response => {
         expect(response.body).toEqual({
-          id: "73WakrfVbNJBaAmhQtEeDv",
+          id: TEST_USER_ID,
           name: "john-doe",
           type: "Admin",
           email: "john-doe@domain.tld",
@@ -72,7 +67,7 @@ describe("Test the root path", () => {
 
   test("It should create a user", () => {
     return request(app)
-      .post("/users")
+      .post(USERS_PATH)
       .set("Authorization", `Bearer ${jwtValue}`)
       .send({
         name: "john-wick",
@@ -95,10 +90,9 @@ describe("Test the root path", () => {
   });
 
   test("It should update a user as unauthorized", async () => {
-
-    await fixtures.reset()
+    await fixtures.reset();
     return request(app)
-      .patch("/users/73WakrfVbNJBaAmhQtEeDv")
+      .patch(`${USERS_PATH}/${TEST_USER_ID}`)
       .set("Authorization", `Bearer ${jwtValue}`)
       .send({ name: "john-wick-II", type: "Employee" })
       .set("Accept", "application/json")
@@ -114,9 +108,9 @@ describe("Test the root path", () => {
   });
 
   test("It should not delete a user as unauthorized", async () => {
-    await fixtures.reset()
+    await fixtures.reset();
     return request(app)
-      .delete("/users/73WakrfVbNJBaAmhQtEeDv")
+      .delete(`${USERS_PATH}/${TEST_USER_ID}`)
       .set("Authorization", `Bearer ${jwtValue}`)
       .set("Accept", "application/json")
       .expect(401);

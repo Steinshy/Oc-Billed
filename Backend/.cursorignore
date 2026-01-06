@@ -1,0 +1,40 @@
+# Dependencies
+node_modules
+
+# Build output
+dist
+dist-ssr
+dev-dist
+
+# Test coverage
+coverage
+.stryker-tmp
+
+# Cache directories
+.cache
+.eslintcache
+.prettier-cache
+
+# Editor directories
+.idea
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Project-specific
+.oc
+
+# Lighthouse reports
+lighthouse
+lighthouse-report*.html
+.lighthouseci
+
+# Generated reports and benchmarks
+benchmark-results
+Benchmark
+Report
+
+# Project-specific
+public/*
+database/*
