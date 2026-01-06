@@ -10,7 +10,11 @@ const userRoute = require("./routes/user.js");
 const upload = multer({ dest: "public/" });
 const app = express();
 app.use(cors());
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  }),
+);
 app.use(express.json());
 app.use("/public", express.static("public"));
 app.get("/", (req, res) => {

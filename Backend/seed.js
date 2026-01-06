@@ -143,6 +143,7 @@ const clearDatabase = async () => {
 
 const seedDatabase = async () => {
   try {
+    await clearDatabase();
     await User.bulkCreate(seedUsers);
     console.log(`${seedUsers.length} users created`);
 
@@ -161,7 +162,6 @@ const resetDatabase = async () => {
     await sequelize.authenticate();
     console.log("Connection to database established");
 
-    await clearDatabase();
     await seedDatabase();
 
     await sequelize.close();
