@@ -5,12 +5,10 @@
   "main": "server.js",
   "author": "techer jean sebastien <techerjeansebastien.pro@gmail.com>",
   "license": "MIT",
-  "engines": {
-    "node": "25.2.1"
-  },
   "scripts": {
     "test": "NODE_ENV=test sequelize-cli db:migrate && jest test -i tests/user.test.js --watch",
-    "run:dev": "NODE_ENV=development sequelize-cli db:migrate && node server.js",
+    "dev": "NODE_ENV=development sequelize-cli db:migrate && node server.js",
+    "dev:all": "concurrently \"npm run dev\" \"cd ../Frontend && npm run dev\"",
     "lint": "eslint ./"
   },
   "dependencies": {
@@ -25,11 +23,10 @@
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-preset-env": "^1.7.0",
+    "concurrently": "^9.1.2",
     "eslint": "^9.39.2",
-    "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.31.0",
+    "globals": "17.0.0",
     "jest": "^30.2.0",
     "sequelize-cli": "^6.6.5",
     "sequelize-fixtures": "^1.2.0",
