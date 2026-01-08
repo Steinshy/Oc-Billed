@@ -11,11 +11,9 @@ const row = (bill) => {
       <td>${bill.date}</td>
       <td>${bill.amount} €</td>
       <td>${bill.status}</td>
-      <td>
-        ${Actions(bill.fileUrl)}
-      </td>
+      <td>${Actions(bill.fileUrl)}</td>
     </tr>
-    `;
+  `;
 };
 
 const rows = (data) => {
@@ -55,16 +53,16 @@ export default ({ data: bills, loading, error }) => {
   : bills;
 
   return `
-    <div class='layout'>
+    <div class="layout">
       ${VerticalLayout()}
-      <div class='content'>
-        <div class='content-header'>
-          <div class='content-title'> Mes notes de frais </div>
-          <button type="button" data-testid='btn-new-bill' class="btn btn-primary">Nouvelle note de frais</button>
+      <div class="content">
+        <div class="content-header">
+          <div class="content-title">Mes notes de frais</div>
+          <button type="button" data-testid="btn-new-bill" class="btn btn-primary">Nouvelle note de frais</button>
         </div>
         <div id="data-table">
-        <table id="example" class="table table-striped">
-          <thead>
+          <table id="example" class="table table-striped">
+            <thead>
               <tr>
                 <th>Type</th>
                 <th>Nom</th>
@@ -73,10 +71,10 @@ export default ({ data: bills, loading, error }) => {
                 <th>Statut</th>
                 <th>Actions</th>
               </tr>
-          </thead>
-          <tbody data-testid="tbody">
-            ${rows(sortedBills)}
-          </tbody>
+            </thead>
+            <tbody data-testid="tbody">
+              ${rows(sortedBills)}
+            </tbody>
           </table>
         </div>
       </div>

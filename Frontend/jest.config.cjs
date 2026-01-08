@@ -24,6 +24,7 @@ const config = {
   },
 
   modulePaths: ["<rootDir>"],
+  modulePathIgnorePatterns: ["<rootDir>/.stryker-tmp"],
   moduleNameMapper: {
     "\\.(css|less|sass|scss)$": "<rootDir>/src/__mocks__/styleMock.js",
     "^@testing-library/jest-dom/extend-expect$": "@testing-library/jest-dom",
@@ -42,9 +43,27 @@ const config = {
     "src/**/*.{js,jsx}",
     "!**/*.config.{js,cjs,mjs}",
     "!src/app/App.js",
+    "!src/app/datepicker.js",
     "!src/__tests__/**",
     "!src/__mocks__/**",
     "!src/fixtures/**",
+    "!src/assets/svg/**",
+  ],
+  coverageReporters: [
+    "text",
+    "lcov",
+    "html",
+  ],
+  coverageDirectory: "coverage",
+  reporters: [
+    "default",
+    ["./node_modules/jest-html-reporter", {
+      pageTitle: "Test Report",
+      outputPath: "./test-report.html",
+      includeFailureMsg: true,
+      includeStackTrace: true,
+      sort: "status",
+    }],
   ],
 };
 

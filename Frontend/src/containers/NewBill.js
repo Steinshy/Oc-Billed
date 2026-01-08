@@ -10,7 +10,8 @@ export default class NewBill {
     this.fileName = null;
     this.filePath = null;
     this.billId = null;
-    this.userData = JSON.parse(localStorage.getItem("user"));
+    const userItem = localStorage.getItem("user");
+    this.userData = userItem ? JSON.parse(userItem) : null;
 
     const formNewBill = this.document.querySelector('form[data-testid="form-new-bill"]');
 
@@ -64,7 +65,13 @@ export default class NewBill {
     if (existingError) existingError.remove();
 
     const formData = new FormData();
-    const email = this.userData?.email || JSON.parse(localStorage.getItem("user")).email;
+    const userItem = localStorage.getItem("user");
+    const user = userItem ? JSON.parse(userItem) : null;
+    const email = this.userData?.email || user?.email;
+    if (!email) {
+      console.error("User email not found");
+      return;
+    }
     formData.append("file", file);
     formData.append("email", email);
 
@@ -87,7 +94,13 @@ export default class NewBill {
       return;
     }
 
-    const email = this.userData? this.userData.email : JSON.parse(localStorage.getItem("user")).email;
+    const userItem = localStorage.getItem("user");
+    const user = userItem ? JSON.parse(userItem) : null;
+    const email = this.userData?.email || user?.email;
+    if (!email) {
+      console.error("User email not found");
+      return;
+    }
     const bill = {
       email,
       type: event.target.querySelector('select[data-testid="expense-type"]').value,

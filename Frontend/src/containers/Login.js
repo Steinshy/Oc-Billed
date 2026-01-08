@@ -55,20 +55,21 @@ export default class Login {
       });
   };
 
-  // not need to cover this function by tests
+  /* istanbul ignore next */
   login = user => {
     if (this.store) {
       return this.store
         .login(JSON.stringify({ email: user.email, password: user.password }))
         .then(({ jwt }) => {
           this.localStorage.setItem("jwt", jwt);
+        })
+        .catch(error => {
+          return Promise.reject(error);
         });
-    } else {
-      return null;
     }
   };
 
-  // not need to cover this function by tests
+  /* istanbul ignore next */
   createUser = user => {
     if (this.store) {
       return this.store.users()
@@ -76,9 +77,10 @@ export default class Login {
         .then(() => {
           console.log(`User with ${user.email} is created`);
           return this.login(user);
+        })
+        .catch(error => {
+          return Promise.reject(error);
         });
-    } else {
-      return null;
     }
   };
 }

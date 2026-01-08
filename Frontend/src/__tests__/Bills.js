@@ -1,7 +1,8 @@
-import { screen, waitFor } from "@testing-library/dom";
+import { fireEvent, screen, waitFor } from "@testing-library/dom";
 import { localStorageMock } from "../__mocks__/localStorage.js";
 import router from "../app/Router.js";
 import { ROUTES_PATH } from "../constants/routes.js";
+import Bills from "../containers/Bills.js";
 import { bills } from "../fixtures/bills.js";
 import BillsUI from "../views/BillsUI.js";
 
@@ -23,19 +24,282 @@ describe("Given I am connected as an employee", () => {
       router();
       window.onNavigate(ROUTES_PATH.Bills);
       await waitFor(() => screen.getByTestId("icon-window"));
-      const _windowIcon = screen.getByTestId("icon-window");
-      //to-do write expect expression
+      const windowIcon = screen.getByTestId("icon-window");
+      expect(windowIcon).toHaveClass("active-icon");
     });
+
     test("Then bills should be ordered from earliest to latest", () => {
       document.body.innerHTML = BillsUI({ data: bills });
-      const dates = screen
-        .getAllByText(
-          /^(19|20)\d\d[ ./-](0[1-9]|1[0-2])[ ./-](0[1-9]|[12]\d|3[01])$/i,
-        )
+      const dates = screen.getAllByText(/\d{4}-\d{2}-\d{2}/)
         .map((a) => a.innerHTML);
       const antiChrono = (a, b) => (a < b ? 1 : -1);
       const datesSorted = [...dates].sort(antiChrono);
       expect(dates).toEqual(datesSorted);
+    });
+
+    describe("When I load my bills", () => {
+      test("Then bills should be fetched and formatted correctly", async () => {
+        const onNavigate = jest.fn();
+        const mockStore = {
+          bills: jest.fn(() => ({
+            list: jest.fn(() => Promise.resolve([
+              {
+                id: "1",
+                status: "pending",
+                date: "2004-04-04",
+                amount: 100,
+                type: "Transports",
+              },
+              {
+                id: "2",
+                status: "accepted",
+                date: "2003-03-03",
+                amount: 200,
+                type: "Restaurants",
+              },
+            ])),
+          })),
+        };
+
+        const billsInstance = new Bills({
+          document,
+          onNavigate,
+          store: mockStore,
+          localStorage: localStorageMock,
+        });
+
+        const result = await billsInstance.getBills();
+
+        expect(result).toBeTruthy();
+        expect(result.length).toBe(2);
+        expect(result[0].date).toBe("4 Avr. 04");
+        expect(result[0].status).toBe("En attente");
+        expect(result[1].date).toBe("3 Mar. 03");
+        expect(result[1].status).toBe("Accepté");
+      });
+
+      test("Then corrupted bill data should be handled gracefully", async () => {
+        const onNavigate = jest.fn();
+        const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+
+        const mockStore = {
+          bills: jest.fn(() => ({
+            list: jest.fn(() => Promise.resolve([
+              {
+                id: "1",
+                status: "pending",
+                date: "invalid-date",
+                amount: 100,
+                type: "Transports",
+              },
+            ])),
+          })),
+        };
+
+        const billsInstance = new Bills({
+          document,
+          onNavigate,
+          store: mockStore,
+          localStorage: localStorageMock,
+        });
+
+        const result = await billsInstance.getBills();
+
+        expect(result).toBeTruthy();
+        expect(result.length).toBe(1);
+        expect(result[0].date).toBe("invalid-date");
+        expect(result[0].status).toBe("En attente");
+        expect(consoleSpy).toHaveBeenCalled();
+
+        consoleSpy.mockRestore();
+      });
+
+      test("Then empty bills list should return empty array", async () => {
+        const onNavigate = jest.fn();
+        const mockStore = {
+          bills: jest.fn(() => ({
+            list: jest.fn(() => Promise.resolve([])),
+          })),
+        };
+
+        const billsInstance = new Bills({
+          document,
+          onNavigate,
+          store: mockStore,
+          localStorage: localStorageMock,
+        });
+
+        const result = await billsInstance.getBills();
+
+        expect(result).toBeTruthy();
+        expect(result.length).toBe(0);
+      });
+
+      test("Then getBills should return undefined when store is unavailable", () => {
+        const onNavigate = jest.fn();
+
+        const billsInstance = new Bills({
+          document,
+          onNavigate,
+          store: null,
+          localStorage: localStorageMock,
+        });
+
+        const result = billsInstance.getBills();
+
+        expect(result).toBeUndefined();
+      });
+
+      test("Then API error should be handled gracefully", async () => {
+        const onNavigate = jest.fn();
+        const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+
+        const mockStore = {
+          bills: jest.fn(() => ({
+            list: jest.fn().mockRejectedValue(new Error("API Error: Failed to fetch bills")),
+          })),
+        };
+
+        const billsInstance = new Bills({
+          document,
+          onNavigate,
+          store: mockStore,
+          localStorage: localStorageMock,
+        });
+
+        await expect(billsInstance.getBills()).rejects.toThrow("API Error: Failed to fetch bills");
+
+        consoleErrorSpy.mockRestore();
+      });
+
+      test("Then network error should be handled gracefully", async () => {
+        const onNavigate = jest.fn();
+
+        const mockStore = {
+          bills: jest.fn(() => ({
+            list: jest.fn().mockRejectedValue(new Error("Network error")),
+          })),
+        };
+
+        const billsInstance = new Bills({
+          document,
+          onNavigate,
+          store: mockStore,
+          localStorage: localStorageMock,
+        });
+
+        await expect(billsInstance.getBills()).rejects.toThrow("Network error");
+      });
+
+      test("Then 404 error should be handled gracefully", async () => {
+        const onNavigate = jest.fn();
+
+        const mockStore = {
+          bills: jest.fn(() => ({
+            list: jest.fn().mockRejectedValue(new Error("404 Not Found")),
+          })),
+        };
+
+        const billsInstance = new Bills({
+          document,
+          onNavigate,
+          store: mockStore,
+          localStorage: localStorageMock,
+        });
+
+        await expect(billsInstance.getBills()).rejects.toThrow("404 Not Found");
+      });
+    });
+
+    test("Then clicking on eye icon should open modal with bill image", () => {
+      const onNavigate = jest.fn();
+      document.body.innerHTML = BillsUI({ data: bills });
+      const modalMock = jest.fn();
+      const originalModal = $.fn.modal;
+      $.fn.modal = modalMock;
+      $.fn.width = jest.fn(() => 1000);
+      new Bills({ document, onNavigate, store: null, localStorage: localStorageMock });
+      const iconEye = screen.getAllByTestId("icon-eye")[0];
+      const billUrl = iconEye.getAttribute("data-bill-url");
+      fireEvent.click(iconEye);
+      const modal = document.querySelector("#modaleFile");
+      expect(modal).toBeTruthy();
+      expect(modal.getAttribute("aria-hidden")).toBe("false");
+      const modalBody = modal.querySelector(".modal-body");
+      const img = modalBody.querySelector("img");
+      expect(img).toBeTruthy();
+      expect(img.getAttribute("src")).toBe(billUrl);
+      expect(modalMock).toHaveBeenCalledWith("show");
+      $.fn.modal = originalModal;
+    });
+
+    test("Then clicking on eye icon with invalid file URL should not open modal", () => {
+      const onNavigate = jest.fn();
+      const billsWithInvalidUrl = [
+        {
+          ...bills[0],
+          fileUrl: null,
+        },
+      ];
+      document.body.innerHTML = BillsUI({ data: billsWithInvalidUrl });
+      const modalMock = jest.fn();
+      const originalModal = $.fn.modal;
+      $.fn.modal = modalMock;
+      new Bills({ document, onNavigate, store: null, localStorage: localStorageMock });
+      const iconEye = screen.getAllByTestId("icon-eye")[0];
+      fireEvent.click(iconEye);
+      const modal = document.querySelector("#modaleFile");
+      expect(modal).toBeTruthy();
+      expect(modal.getAttribute("aria-hidden")).not.toBe("false");
+      expect(modalMock).not.toHaveBeenCalled();
+      $.fn.modal = originalModal;
+    });
+
+    test("Then clicking on eye icon with 'null' string file URL should not open modal", () => {
+      const onNavigate = jest.fn();
+      const billsWithInvalidUrl = [
+        {
+          ...bills[0],
+          fileUrl: "null",
+        },
+      ];
+      document.body.innerHTML = BillsUI({ data: billsWithInvalidUrl });
+      const modalMock = jest.fn();
+      const originalModal = $.fn.modal;
+      $.fn.modal = modalMock;
+      new Bills({ document, onNavigate, store: null, localStorage: localStorageMock });
+      const iconEye = screen.getAllByTestId("icon-eye")[0];
+      fireEvent.click(iconEye);
+      expect(modalMock).not.toHaveBeenCalled();
+      $.fn.modal = originalModal;
+    });
+
+    test("Then clicking on eye icon with undefined file URL should not open modal", () => {
+      const onNavigate = jest.fn();
+      const billsWithInvalidUrl = [
+        {
+          ...bills[0],
+          fileUrl: undefined,
+        },
+      ];
+      document.body.innerHTML = BillsUI({ data: billsWithInvalidUrl });
+      const modalMock = jest.fn();
+      const originalModal = $.fn.modal;
+      $.fn.modal = modalMock;
+      new Bills({ document, onNavigate, store: null, localStorage: localStorageMock });
+      const iconEye = screen.getAllByTestId("icon-eye")[0];
+      fireEvent.click(iconEye);
+      expect(modalMock).not.toHaveBeenCalled();
+      $.fn.modal = originalModal;
+    });
+
+    test("Then clicking on 'Nouvelle note de frais' button should navigate to NewBill page", () => {
+      const onNavigate = jest.fn();
+      document.body.innerHTML = BillsUI({ data: bills });
+      new Bills({ document, onNavigate, store: null, localStorage: localStorageMock });
+      const buttonNewBill = screen.getByTestId("btn-new-bill");
+      fireEvent.click(buttonNewBill);
+      expect(onNavigate).toHaveBeenCalledWith(ROUTES_PATH["NewBill"]);
     });
   });
 });

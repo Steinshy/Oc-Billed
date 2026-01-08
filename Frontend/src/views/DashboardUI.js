@@ -10,41 +10,35 @@ export default ({ data, loading, error }) => {
   if (error) return ErrorPage(error);
 
   return `
-    <div class='layout'>
+    <div class="layout">
       ${VerticalLayout()}
-      <div class='dashboard-content'>
-        <div class='bills-feed'>
-          <div class='status-bills-header' id='status-bills-header1'>
-            <h3> En attente (${
-              filteredBills(data && data.bills, "pending").length
-            }) </h3>
-            <span class='arrow-icon' id='arrow-icon1' data-testid='arrow-icon1'>${ArrowIcon}</span>
+      <div class="dashboard-content">
+        <div class="bills-feed">
+          <div class="status-bills-header" id="status-bills-header1">
+            <h3>En attente (${filteredBills(data && data.bills, "pending").length})</h3>
+            <span class="arrow-icon" id="arrow-icon1" data-testid="arrow-icon1">${ArrowIcon}</span>
           </div>
-          <div class='status-bills-container' id='status-bills-container1'>
+          <div class="status-bills-container" id="status-bills-container1">
           </div>
-          
-            <div class='status-bills-header' id='status-bills-header2'>
-              <h3> Validé (${
-                filteredBills(data && data.bills, "accepted").length
-              }) </h3>
-              <span class='arrow-icon' id='arrow-icon2' data-testid='arrow-icon2'>${ArrowIcon}</span>
-            </div>
-            <div class='status-bills-container' id='status-bills-container2'>
-            </div>
-
-            <div class='status-bills-header' id='status-bills-header3'>
-              <h3> Refusé (${
-                filteredBills(data && data.bills, "refused").length
-              }) </h3>
-              <span class='arrow-icon' id='arrow-icon3' data-testid='arrow-icon3'>${ArrowIcon}</span>
-            </div>
-            <div class='status-bills-container' id='status-bills-container3'>
-            </div>
-
+          <div class="status-bills-header" id="status-bills-header2">
+            <h3>Validé (${filteredBills(data && data.bills, "accepted").length})</h3>
+            <span class="arrow-icon" id="arrow-icon2" data-testid="arrow-icon2">${ArrowIcon}</span>
+          </div>
+          <div class="status-bills-container" id="status-bills-container2">
+          </div>
+          <div class="status-bills-header" id="status-bills-header3">
+            <h3>Refusé (${filteredBills(data && data.bills, "refused").length})</h3>
+            <span class="arrow-icon" id="arrow-icon3" data-testid="arrow-icon3">${ArrowIcon}</span>
+          </div>
+          <div class="status-bills-container" id="status-bills-container3">
+          </div>
         </div>
         <div class="dashboard-right-container">
-          <h3> Validations </h3>
-          <div><div id="big-billed-icon" data-testid="big-billed-icon"> ${BigBilledIcon} </div></div>
+          <h3>Validations</h3>
+          <div>
+            <div id="big-billed-icon" data-testid="big-billed-icon">${BigBilledIcon}</div>
+          </div>
+        </div>
       </div>
     </div>`;
 };

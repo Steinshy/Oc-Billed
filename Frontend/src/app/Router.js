@@ -21,7 +21,7 @@ export default async () => {
   const rootDiv = document.getElementById("root");
   rootDiv.innerHTML = ROUTES({ pathname: window.location.pathname });
 
-  window.onNavigate = pathname => {
+  const onNavigate = pathname => {
     window.history.pushState({}, pathname, window.location.origin + pathname);
     if (pathname === ROUTES_PATH["Login"]) {
       rootDiv.innerHTML = ROUTES({ pathname });
@@ -65,17 +65,24 @@ export default async () => {
     }
   };
 
+  window.onNavigate = onNavigate;
+
   window.onpopstate = () => {
-    const user = JSON.parse(localStorage.getItem("user"));
+    const userItem = localStorage.getItem("user");
+    const user = userItem ? JSON.parse(userItem) : null;
     if (window.location.pathname === "/" && !user) {
       document.body.classList.add("login-page");
       rootDiv.innerHTML = ROUTES({ pathname: window.location.pathname });
-    } else if (user) onNavigate(window.location.pathname);
+    } else if (user) window.onNavigate(window.location.pathname);
   };
 
   if (window.location.pathname === "/" && window.location.hash === "") {
-    new Login({ document, localStorage, onNavigate, store });
-    document.body.classList.add("login-page");
+    try {
+      new Login({ document, localStorage, onNavigate, store });
+      document.body.classList.add("login-page");
+    } catch (error) {
+      console.error("Error initializing Login:", error);
+    }
   } else if (window.location.hash !== "") {
     if (window.location.hash === ROUTES_PATH["Bills"]) {
       rootDiv.innerHTML = ROUTES({ pathname: window.location.hash, loading: true });
@@ -100,12 +107,12 @@ export default async () => {
 
     else if (window.location.hash === ROUTES_PATH["NewBill"]) {
       rootDiv.innerHTML = ROUTES({ pathname: window.location.hash, loading: true });
-      new NewBill({ document, onNavigate, store, localStorage });
       const { divIcon1, divIcon2 } = layoutIcons();
       if (divIcon1 && divIcon2) {
         divIcon1.classList.remove(ACTIVE_ICON_CLASS);
         divIcon2.classList.add(ACTIVE_ICON_CLASS);
       }
+      new NewBill({ document, onNavigate, store, localStorage });
     } else if (window.location.hash === ROUTES_PATH["Dashboard"]) {
       rootDiv.innerHTML = ROUTES({ pathname: window.location.hash, loading: true });
       const bills = new Dashboard({ document, onNavigate, store, bills: [], localStorage });

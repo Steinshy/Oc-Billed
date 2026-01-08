@@ -17,3 +17,5 @@ Frontend/node_modules
 Frontend/coverage
 Frontend/.idea
 
+Frontend/.stryker-tmp
+Frontend/test-report.html

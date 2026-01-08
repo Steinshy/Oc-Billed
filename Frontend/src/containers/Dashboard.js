@@ -5,49 +5,54 @@ import USERS_TEST from "../constants/usersTest.js";
 import DashboardFormUI from "../views/DashboardFormUI.js";
 import Logout from "./Logout.js";
 
+export const shouldIncludeBill = (bill, userEmail, isAdmin) => {
+  if (isAdmin) {
+    return !USERS_TEST.includes(bill.email);
+  }
+  return ![...USERS_TEST, userEmail].includes(bill.email);
+};
+
+const isJestEnvironment = () => {
+  if (process.env.REACT_APP_TEST_MODE === "false") {
+    return false;
+  }
+  return typeof jest !== "undefined" || process.env.NODE_ENV === "test";
+};
+
 export const filteredBills = (data, status) => {
-  return data && data.length
-    ? data.filter((bill) => {
-        let selectCondition;
+  if (!data || !data.length) {
+    return [];
+  }
 
-        // in jest environment
-        if (typeof jest !== "undefined") {
-          selectCondition = bill.status === status;
-        } else {
-        /* istanbul ignore next */
-          // in prod environment
-          const user = JSON.parse(localStorage.getItem("user"));
-          const userEmail = user.email;
-          const isAdmin = user.type === "Admin";
+  return data.filter((bill) => {
+    if (bill.status !== status) {
+      return false;
+    }
 
-          if (isAdmin) {
-            selectCondition = bill.status === status && !USERS_TEST.includes(bill.email);
-          } else {
-            selectCondition =
-              bill.status === status &&
-              ![...USERS_TEST, userEmail].includes(bill.email);
-          }
-        }
+    // in jest environment
+    if (isJestEnvironment()) {
+      return true;
+    }
 
-        return selectCondition;
-      })
-    : [];
+    // in prod environment
+    const userItem = localStorage.getItem("user");
+    if (!userItem) return false;
+    const user = JSON.parse(userItem);
+    const userEmail = user?.email;
+    const isAdmin = user?.type === "Admin";
+
+    return shouldIncludeBill(bill, userEmail, isAdmin);
+  });
 };
 
 
 export const card = (bill) => {
   const firstAndLastNames = bill.email.split("@")[0];
-  const firstName = firstAndLastNames.includes(".")
-    ? firstAndLastNames.split(".")[0]
-    : "";
-  const lastName = firstAndLastNames.includes(".")
-    ? firstAndLastNames.split(".")[1]
-    : firstAndLastNames;
+  const firstName = firstAndLastNames.includes(".") ? firstAndLastNames.split(".")[0] : "";
+  const lastName = firstAndLastNames.includes(".") ? firstAndLastNames.split(".")[1] : firstAndLastNames;
 
   return `
-    <div class='bill-card' id='open-bill${bill.id}' data-testid='open-bill${
-    bill.id
-  }'>
+    <div class='bill-card' id='open-bill${bill.id}' data-testid='open-bill${ bill.id}'>
       <div class='bill-card-name-container'>
         <div class='bill-card-name'> ${firstName} ${lastName} </div>
         <span class='bill-card-grey'> ... </span>
@@ -81,12 +86,12 @@ export const getStatus = (index) => {
 
 
 export default class {
-  constructor({ document, onNavigate, store, bills, localStorage }) {
+  constructor({ document, onNavigate, store, bills, localStorage, preservedSectionIndex = null }) {
     this.document = document;
     this.onNavigate = onNavigate;
     this.store = store;
     this.bills = bills;
-    this.preservedSectionIndex = null;
+    this.preservedSectionIndex = preservedSectionIndex;
 
     $(document).on("click", "#status-bills-header1", () => this.handleShowTickets(1));
     $(document).on("click", "#arrow-icon1", (event) => {
@@ -125,12 +130,7 @@ export default class {
   }
 
   handleShowTickets(event, bills, index) {
-    let actualIndex = index;
-    if (typeof index === "undefined" && typeof event === "number") {
-      actualIndex = event;
-    } else if (typeof bills === "number" && typeof index === "undefined") {
-      actualIndex = bills;
-    }
+    const actualIndex = typeof event === "number" ? event : (typeof bills === "number" ? bills : index);
     const sectionIsOpen = this.index !== undefined && this.index !== actualIndex;
 
     const openTicketsSection = (index) => {
@@ -259,36 +259,13 @@ export default class {
   };
 
 
-  getBillsAllUsers = () => {
-    if (this.store) {
-      return this.store
-        .bills()
-        .list()
-        .then((snapshot) => {
-          const bills = snapshot.map((doc) => ({
-            id: doc.id,
-            ...doc,
-            date: doc.date,
-            status: doc.status,
-          }));
-          return bills;
-        })
-        .catch((error) => {
-          throw error;
-        });
-    }
-  };
+  getBillsAllUsers = () => this.store ? this.store.bills().list()
+    .then(snapshot => snapshot.map(doc => ({ id: doc.id, ...doc, date: doc.date, status: doc.status })))
+    .catch(error => { throw error; }) : Promise.resolve([]);
 
-  // not need to cover this function by tests
   /* istanbul ignore next */
   updateBill = async (bill) => {
-    if (this.store) {
-      return await this.store.bills()
-        .update({ data: JSON.stringify(bill), selector: bill.id })
-        .catch(error => {
-          console.error(error);
-          return Promise.reject(new Error("Failed to update bill"));
-        });
-    }
+    if (!this.store) return;
+    return await this.store.bills().update({ data: JSON.stringify(bill), selector: bill.id });
   };
 }

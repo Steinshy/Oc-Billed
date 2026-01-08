@@ -6,7 +6,7 @@ export default (billUrl) => {
   const iconClass = isValidFile ? "" : "icon-disabled";
   return `
     <div class="icon-actions">
-      <div id="eye" data-testid="icon-eye" data-bill-url=${billUrl} class="${iconClass}">${eyeBlueIcon}</div>
+      <div id="eye" data-testid="icon-eye" data-bill-url="${billUrl}" class="${iconClass}">${eyeBlueIcon}</div>
     </div>
   `;
 };
