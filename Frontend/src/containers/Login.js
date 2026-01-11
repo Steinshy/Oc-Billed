@@ -22,11 +22,7 @@ export default class Login {
     };
     this.localStorage.setItem("user", JSON.stringify(user));
     this.localStorage.removeItem("jwt");
-    this.login(user).catch(error => {
-        this.localStorage.removeItem("jwt");
-        return error ? this.createUser(user) : null;
-      })
-      .then(() => {
+    this.login(user).then(() => {
         this.onNavigate(ROUTES_PATH["Bills"]);
         this.document.body.classList.remove("login-page");
       });
@@ -44,12 +40,7 @@ export default class Login {
 
     this.localStorage.setItem("user", JSON.stringify(user));
     this.localStorage.removeItem("jwt");
-    this.login(user)
-      .catch(error => {
-        this.localStorage.removeItem("jwt");
-        return error ? this.createUser(user) : null;
-      })
-      .then(() => {
+    this.login(user).then(() => {
         this.onNavigate(ROUTES_PATH["Dashboard"]);
         this.document.body.classList.remove("login-page");
       });

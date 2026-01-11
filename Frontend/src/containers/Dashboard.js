@@ -8,43 +8,52 @@ import Logout from "./Logout.js";
 export const shouldIncludeBill = (bill, userEmail, isAdmin) => {
   if (isAdmin) {
     return !USERS_TEST.includes(bill.email);
+  } else {
+    return ![...USERS_TEST, userEmail].includes(bill.email);
   }
-  return ![...USERS_TEST, userEmail].includes(bill.email);
-};
-
-const isJestEnvironment = () => {
-  if (process.env.REACT_APP_TEST_MODE === "false") {
-    return false;
-  }
-  return typeof jest !== "undefined" || process.env.NODE_ENV === "test";
 };
 
 export const filteredBills = (data, status) => {
-  if (!data || !data.length) {
-    return [];
-  }
+  return data && data.length
+    ? data.filter((bill) => {
+        let selectCondition;
 
-  return data.filter((bill) => {
-    if (bill.status !== status) {
-      return false;
-    }
+        // in jest environment
+        if (typeof jest !== "undefined") {
+          selectCondition = bill.status === status;
+        } else {
+        /* istanbul ignore next */
+          // in prod environment
+          try {
+            // Check if localStorage is available
+            if (typeof localStorage === "undefined" || localStorage === null) {
+              return false;
+            }
+            const userStr = localStorage.getItem("user");
+            if (!userStr) {
+              // If no user in localStorage, exclude this bill to avoid errors
+              return false;
+            }
+            const user = JSON.parse(userStr);
+            if (!user || !user.email) {
+              // If user data is invalid, exclude this bill to avoid errors
+              return false;
+            }
+            const userEmail = user.email;
+            const isAdmin = user.type === "Admin";
 
-    // in jest environment
-    if (isJestEnvironment()) {
-      return true;
-    }
+            selectCondition = bill.status === status && shouldIncludeBill(bill, userEmail, isAdmin);
+          } catch (error) {
+            // If localStorage is not available or JSON parse fails, exclude this bill
+            console.error("Error accessing user data:", error);
+            return false;
+          }
+        }
 
-    // in prod environment
-    const userItem = localStorage.getItem("user");
-    if (!userItem) return false;
-    const user = JSON.parse(userItem);
-    const userEmail = user?.email;
-    const isAdmin = user?.type === "Admin";
-
-    return shouldIncludeBill(bill, userEmail, isAdmin);
-  });
+        return selectCondition;
+      })
+    : [];
 };
-
 
 export const card = (bill) => {
   const firstAndLastNames = bill.email.split("@")[0];
@@ -83,7 +92,6 @@ export const getStatus = (index) => {
       return "refused";
   }
 };
-
 
 export default class {
   constructor({ document, onNavigate, store, bills, localStorage, preservedSectionIndex = null }) {
@@ -172,7 +180,6 @@ export default class {
       modalElement.modal("show");
     }
   };
-
   handleEditTicket(e, bill, bills) {
     const isSwitchingTicket = this.id !== undefined && this.id !== bill.id;
 

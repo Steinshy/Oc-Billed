@@ -26,6 +26,12 @@ const BILLS_PAGE_TITLE = "Mes notes de frais";
 
 const DEFAULT_USER = { type: "Employee" };
 
+const TEST_ROUTE_LOGIN = "/";
+const TEST_ROUTE_BILLS = "#employee/bills";
+const TEST_ROUTE_DASHBOARD = "#admin/dashboard";
+const TEST_ROUTE_UNKNOWN = "#unknown/route";
+const TEST_ROUTE_OTHER = "/other";
+
 function setupTestEnvironment(options = {}) {
   const {
     user = DEFAULT_USER,
@@ -58,6 +64,31 @@ function setupTestEnvironment(options = {}) {
   }
 
   return { root };
+}
+
+function mockWindowLocation(pathname, hash = "") {
+  // Create a mock location object with static route values
+  const mockLocation = {
+    pathname,
+    hash,
+    origin: "http://localhost",
+    href: `http://localhost${pathname}${hash}`,
+    assign: jest.fn(),
+    replace: jest.fn(),
+    reload: jest.fn(),
+  };
+
+  try {
+    Reflect.deleteProperty(window, "location");
+  } catch (e) {
+  }
+
+  Object.defineProperty(window, "location", {
+    value: mockLocation,
+    writable: true,
+    configurable: true,
+    enumerable: true,
+  });
 }
 
 describe("Given I am connected and I am on some page of the app", () => {
@@ -334,16 +365,19 @@ describe("Given I am on the login page", () => {
 
     test("Then onNavigate should be called when user exists", async () => {
       setupTestEnvironment();
+      mockWindowLocation(TEST_ROUTE_BILLS, "");
+
       await Router();
 
       const onNavigateSpy = jest.fn();
+      const originalOnNavigate = window.onNavigate;
       window.onNavigate = onNavigateSpy;
 
       fireEvent.popState(window);
 
-      expect(onNavigateSpy).toHaveBeenCalled();
-      const calls = onNavigateSpy.mock.calls;
-      expect(calls.length).toBeGreaterThan(0);
+      expect(onNavigateSpy).toHaveBeenCalledWith(TEST_ROUTE_BILLS);
+
+      window.onNavigate = originalOnNavigate;
     });
 
     test("Then nothing should happen when no user", async () => {
@@ -371,6 +405,7 @@ describe("Given I am on the login page", () => {
   describe("When Router initializes", () => {
     test("Then login page should be rendered", async () => {
       setupTestEnvironment();
+      mockWindowLocation(TEST_ROUTE_LOGIN, "");
 
       Login.mockImplementation(() => ({}));
       await Router();
@@ -381,6 +416,7 @@ describe("Given I am on the login page", () => {
 
     test("Then nothing should happen when conditions are not met", async () => {
       setupTestEnvironment();
+      mockWindowLocation(TEST_ROUTE_OTHER, "");
       document.body.classList.remove(LOGIN_PAGE_CLASS);
 
       Login.mockClear();
@@ -393,5 +429,47 @@ describe("Given I am on the login page", () => {
       expect(result).toBeNull();
       expect(document.body.classList.contains(LOGIN_PAGE_CLASS)).toBe(false);
     });
+
+    test("Then Dashboard page should be rendered when hash is Dashboard", async () => {
+      setupTestEnvironment();
+      mockWindowLocation(TEST_ROUTE_LOGIN, TEST_ROUTE_DASHBOARD);
+
+      Dashboard.mockImplementation(() => ({
+        getBillsAllUsers: () => Promise.resolve(bills),
+      }));
+
+      await Router();
+
+      await waitFor(() => {
+        expect(screen.getByText("Validations")).toBeTruthy();
+      });
+    });
+
+    test("Then Dashboard page should handle error when hash is Dashboard", async () => {
+      setupTestEnvironment();
+      mockWindowLocation(TEST_ROUTE_LOGIN, TEST_ROUTE_DASHBOARD);
+
+      Dashboard.mockImplementation(() => ({
+        getBillsAllUsers: () => Promise.reject(new Error("API Error")),
+      }));
+
+      await Router();
+
+      await waitFor(() => {
+        expect(screen.getByText("Erreur")).toBeTruthy();
+      });
+    });
+
+    test("Then nothing should happen when hash exists but doesn't match routes", async () => {
+      setupTestEnvironment();
+      mockWindowLocation(TEST_ROUTE_LOGIN, TEST_ROUTE_UNKNOWN);
+
+      Login.mockClear();
+      const result = await Router();
+
+      expect(result).toBeNull();
+      expect(Login).not.toHaveBeenCalled();
+    });
   });
+
 });

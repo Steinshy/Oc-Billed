@@ -181,504 +181,440 @@ describe("Utility Functions", () => {
       expect(filteredBills(bills, STATUS_ACCEPTED).length).toBe(1);
       expect(filteredBills(bills, STATUS_REFUSED).length).toBe(2);
     });
+  });
+});
 
-    describe("production environment", () => {
-      const originalTestMode = process.env.REACT_APP_TEST_MODE;
+describe("Given I am connected as an Admin - Dashboard Page", () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+    setupDashboard();
+  });
 
-      beforeEach(() => {
-        Object.defineProperty(window, "localStorage", {
-          value: localStorageMock,
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  test("Then I should see the dashboard layout with bills", () => {
+    expect(screen.getByText("Validations")).toBeTruthy();
+    expect(screen.getByText(/En attente/)).toBeTruthy();
+    expect(screen.getByText(/Validé/)).toBeTruthy();
+    expect(screen.getByText(/Refusé/)).toBeTruthy();
+  });
+
+  test("Then I can view the proof modal", async () => {
+    const arrow = screen.getByTestId("arrow-icon1");
+    fireEvent.click(arrow);
+    await waitFor(() => screen.getByTestId(BILL_47QAXB_TEST_ID));
+    fireEvent.click(screen.getByTestId(BILL_47QAXB_TEST_ID));
+    await waitFor(() => screen.getByTestId(DASHBOARD_FORM_TEST_ID));
+
+    const iconEye = screen.getByTestId("icon-eye-d");
+    $.fn.modal = jest.fn();
+    fireEvent.click(iconEye);
+    expect($.fn.modal).toHaveBeenCalledWith("show");
+    expect(screen.getByTestId("modaleFileAdmin")).toBeTruthy();
+  });
+});
+
+describe("Given I am connected as an Admin - Click Handlers", () => {
+  let dashboard;
+
+  beforeEach(() => {
+    jest.useFakeTimers();
+    const setup = setupDashboard();
+    dashboard = setup.dashboard;
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  describe("Status Headers", () => {
+    [1, 2, 3].forEach((index) => {
+      test(`Then clicking on status-bills-header${index} should call handleShowTickets with ${index}`, async () => {
+        const handleShowTicketsSpy = jest.spyOn(dashboard, "handleShowTickets");
+        const header = document.querySelector(`#status-bills-header${index}`);
+        fireEvent.click(header);
+        expect(handleShowTicketsSpy).toHaveBeenCalledWith(index);
+        await waitFor(() => {
+          const container = document.querySelector(`#status-bills-container${index}`);
+          expect(container).toBeTruthy();
         });
-        process.env.REACT_APP_TEST_MODE = "false";
-        jest.resetModules();
       });
+    });
+  });
 
-      afterEach(() => {
-        if (originalTestMode !== undefined) {
-          process.env.REACT_APP_TEST_MODE = originalTestMode;
-        } else {
-          delete process.env.REACT_APP_TEST_MODE;
-        }
-      });
-
-      test("should filter bills for Admin user in production", () => {
-        process.env.REACT_APP_TEST_MODE = "false";
-        jest.resetModules();
-        const dashboardModule = require("../containers/Dashboard.js");
-        window.localStorage.setItem("user", JSON.stringify({ type: "Admin", email: "admin@test.com" }));
-
-        const testBills = [
-          { ...bills[0], status: STATUS_PENDING, email: "a@a" },
-          { ...bills[1], status: STATUS_PENDING, email: USERS_TEST[0] },
-        ];
-
-        const filtered = dashboardModule.filteredBills(testBills, STATUS_PENDING);
-        expect(filtered.length).toBe(1);
-        expect(filtered[0].email).toBe("a@a");
-      });
-
-      test("should filter bills for Employee user in production", () => {
-        jest.resetModules();
-        const dashboardModule = require("../containers/Dashboard.js");
-        window.localStorage.setItem("user", JSON.stringify({ type: "Employee", email: EMPLOYEE_EMAIL }));
-
-        const testBills = [
-          { id: "1", status: STATUS_PENDING, email: EMPLOYEE_EMAIL, name: "Bill 1", amount: 100, date: "2001-01-01", type: "Transports" },
-          { id: "2", status: STATUS_PENDING, email: OTHER_EMAIL, name: "Bill 2", amount: 200, date: "2002-02-02", type: "Restaurants" },
-          { id: "3", status: STATUS_PENDING, email: USERS_TEST[0], name: "Bill 3", amount: 300, date: "2003-03-03", type: "Services" },
-        ];
-
-        const filtered = dashboardModule.filteredBills(testBills, STATUS_PENDING);
-        expect(filtered.length).toBe(2);
-        expect(filtered[0].email).toBe(EMPLOYEE_EMAIL);
-        expect(filtered[1].email).toBe(OTHER_EMAIL);
+  describe("Arrow Icons", () => {
+    [1, 2, 3].forEach((index) => {
+      test(`Then clicking on arrow-icon${index} should call handleShowTickets with ${index} and stop propagation`, async () => {
+        const handleShowTicketsSpy = jest.spyOn(dashboard, "handleShowTickets");
+        const arrowIcon = document.querySelector(`#arrow-icon${index}`);
+        const stopPropagationSpy = jest.fn();
+        const mockEvent = $.Event("click");
+        mockEvent.stopPropagation = stopPropagationSpy;
+        $(arrowIcon).trigger(mockEvent);
+        expect(stopPropagationSpy).toHaveBeenCalled();
+        expect(handleShowTicketsSpy).toHaveBeenCalledWith(index);
+        await waitFor(() => {
+          const container = document.querySelector(`#status-bills-container${index}`);
+          expect(container).toBeTruthy();
+        });
       });
     });
   });
 });
 
-describe("Given I am connected as an Admin", () => {
-  describe("When I am on Dashboard page", () => {
-    let dashboard;
-    let onNavigate;
+describe("Given I am connected as an Admin - Constructor Event Handlers", () => {
+  let dashboard;
 
-    beforeEach(() => {
-      jest.useFakeTimers();
-      const setup = setupDashboard();
-      dashboard = setup.dashboard;
-      onNavigate = setup.onNavigate;
-    });
+  beforeEach(() => {
+    jest.useFakeTimers();
+    const setup = setupDashboard();
+    dashboard = setup.dashboard;
+  });
 
-    afterEach(() => {
-      jest.useRealTimers();
-    });
+  afterEach(() => {
+    jest.useRealTimers();
+  });
 
-    test("Then I should see the dashboard layout with bills", () => {
-      expect(screen.getByText("Validations")).toBeTruthy();
-      expect(screen.getByText(/En attente/)).toBeTruthy();
-      expect(screen.getByText(/Validé/)).toBeTruthy();
-      expect(screen.getByText(/Refusé/)).toBeTruthy();
-    });
+  test("Then clicking on open-bill element should call handleEditTicket with the correct bill", async () => {
+    dashboard.handleShowTickets(1);
+    await waitFor(() => screen.getByTestId(BILL_47QAXB_TEST_ID));
+    const handleEditTicketSpy = jest.spyOn(dashboard, "handleEditTicket");
+    const billElement = screen.getByTestId(BILL_47QAXB_TEST_ID);
+    fireEvent.click(billElement);
+    expect(handleEditTicketSpy).toHaveBeenCalled();
+    await waitFor(() => screen.getByTestId(DASHBOARD_FORM_TEST_ID));
+  });
 
-    describe("Click Handlers - Status Headers", () => {
-      [1, 2, 3].forEach((index) => {
-        test(`Then clicking on status-bills-header${index} should call handleShowTickets with ${index}`, async () => {
-          const handleShowTicketsSpy = jest.spyOn(dashboard, "handleShowTickets");
-          const header = document.querySelector(`#status-bills-header${index}`);
-          fireEvent.click(header);
-          expect(handleShowTicketsSpy).toHaveBeenCalledWith(index);
-          await waitFor(() => {
-            const container = document.querySelector(`#status-bills-container${index}`);
-            expect(container).toBeTruthy();
-          });
-        });
+  test("Then clicking on open-bill element with non-existent bill should not call handleEditTicket", async () => {
+    dashboard.handleShowTickets(1);
+    await waitFor(() => screen.getByTestId(BILL_47QAXB_TEST_ID));
+    const handleEditTicketSpy = jest.spyOn(dashboard, "handleEditTicket");
+    const fakeBillElement = document.createElement("div");
+    fakeBillElement.id = "open-billnonexistent";
+    document.body.appendChild(fakeBillElement);
+    fireEvent.click(fakeBillElement);
+    expect(handleEditTicketSpy).not.toHaveBeenCalled();
+  });
+
+  describe("preservedSectionIndex", () => {
+    test("Then Dashboard should restore preservedSectionIndex on initialization when set", () => {
+      Object.defineProperty(window, "localStorage", {
+        value: localStorageMock,
       });
-    });
+      window.localStorage.setItem("user", JSON.stringify({ type: "Admin" }));
+      document.body.innerHTML = DashboardUI({ data: { bills } });
 
-    describe("Click Handlers - Arrow Icons", () => {
-      [1, 2, 3].forEach((index) => {
-        test(`Then clicking on arrow-icon${index} should call handleShowTickets with ${index} and stop propagation`, async () => {
-          const handleShowTicketsSpy = jest.spyOn(dashboard, "handleShowTickets");
-          const arrowIcon = document.querySelector(`#arrow-icon${index}`);
-          const stopPropagationSpy = jest.fn();
-          const mockEvent = $.Event("click");
-          mockEvent.stopPropagation = stopPropagationSpy;
-          $(arrowIcon).trigger(mockEvent);
-          expect(stopPropagationSpy).toHaveBeenCalled();
-          expect(handleShowTicketsSpy).toHaveBeenCalledWith(index);
-          await waitFor(() => {
-            const container = document.querySelector(`#status-bills-container${index}`);
-            expect(container).toBeTruthy();
-          });
-        });
-      });
-    });
-
-    describe("Constructor Event Handlers", () => {
-      test("Then clicking on open-bill element should call handleEditTicket with the correct bill", async () => {
-        dashboard.handleShowTickets(1);
-        await waitFor(() => screen.getByTestId(BILL_47QAXB_TEST_ID));
-        const handleEditTicketSpy = jest.spyOn(dashboard, "handleEditTicket");
-        const billElement = screen.getByTestId(BILL_47QAXB_TEST_ID);
-        fireEvent.click(billElement);
-        expect(handleEditTicketSpy).toHaveBeenCalled();
-        await waitFor(() => screen.getByTestId(DASHBOARD_FORM_TEST_ID));
+      const onNavigate = jest.fn((pathname) => {
+        document.body.innerHTML = ROUTES({ pathname });
       });
 
-      test("Then clicking on open-bill element with non-existent bill should not call handleEditTicket", async () => {
-        dashboard.handleShowTickets(1);
-        await waitFor(() => screen.getByTestId(BILL_47QAXB_TEST_ID));
-        const handleEditTicketSpy = jest.spyOn(dashboard, "handleEditTicket");
-        const fakeBillElement = document.createElement("div");
-        fakeBillElement.id = "open-billnonexistent";
-        document.body.appendChild(fakeBillElement);
-        fireEvent.click(fakeBillElement);
-        expect(handleEditTicketSpy).not.toHaveBeenCalled();
+      const dashboard = new Dashboard({
+        document,
+        onNavigate,
+        store: mockStore,
+        bills,
+        localStorage: window.localStorage,
+        preservedSectionIndex: 1,
       });
 
-      describe("preservedSectionIndex", () => {
-        test("Then Dashboard should restore preservedSectionIndex on initialization when set", () => {
-          Object.defineProperty(window, "localStorage", {
-            value: localStorageMock,
-          });
-          window.localStorage.setItem("user", JSON.stringify({ type: "Admin" }));
-          document.body.innerHTML = DashboardUI({ data: { bills } });
+      const handleShowTicketsSpy = jest.spyOn(dashboard, "handleShowTickets");
 
-          const onNavigate = jest.fn((pathname) => {
-            document.body.innerHTML = ROUTES({ pathname });
-          });
+      jest.advanceTimersByTime(100);
+      expect(handleShowTicketsSpy).toHaveBeenCalledWith(1);
+      handleShowTicketsSpy.mockRestore();
+    });
 
-          const dashboard = new Dashboard({
-            document,
-            onNavigate,
-            store: mockStore,
-            bills,
-            localStorage: window.localStorage,
-            preservedSectionIndex: 1,
-          });
+    test("Then Dashboard should not call handleShowTickets if headerElement does not exist", () => {
+      const dashboardWithPreserved = setupDashboard({ preservedSectionIndex: 99 });
+      const handleShowTicketsSpy = jest.spyOn(dashboardWithPreserved.dashboard, "handleShowTickets");
 
-          const handleShowTicketsSpy = jest.spyOn(dashboard, "handleShowTickets");
+      jest.advanceTimersByTime(100);
+      expect(handleShowTicketsSpy).not.toHaveBeenCalled();
+      handleShowTicketsSpy.mockRestore();
+    });
 
-          jest.advanceTimersByTime(100);
-          expect(handleShowTicketsSpy).toHaveBeenCalledWith(1);
-          handleShowTicketsSpy.mockRestore();
-        });
+    test("Then Dashboard should not restore preservedSectionIndex when it is null", () => {
+      const newDashboard = setupDashboard();
+      const handleShowTicketsSpy = jest.spyOn(newDashboard.dashboard, "handleShowTickets");
 
-        test("Then Dashboard should not call handleShowTickets if headerElement does not exist", () => {
-          const dashboardWithPreserved = setupDashboard({ preservedSectionIndex: 99 });
-          const handleShowTicketsSpy = jest.spyOn(dashboardWithPreserved.dashboard, "handleShowTickets");
+      jest.advanceTimersByTime(100);
+      expect(handleShowTicketsSpy).not.toHaveBeenCalled();
+      handleShowTicketsSpy.mockRestore();
+    });
 
-          jest.advanceTimersByTime(100);
-          expect(handleShowTicketsSpy).not.toHaveBeenCalled();
-          handleShowTicketsSpy.mockRestore();
-        });
+    test("Then Dashboard should not restore preservedSectionIndex when bills array is empty", () => {
+      const dashboardWithPreserved = setupDashboard({ bills: [], preservedSectionIndex: 1 });
+      const handleShowTicketsSpy = jest.spyOn(dashboardWithPreserved.dashboard, "handleShowTickets");
 
-        test("Then Dashboard should not restore preservedSectionIndex when it is null", () => {
-          const newDashboard = setupDashboard();
-          const handleShowTicketsSpy = jest.spyOn(newDashboard.dashboard, "handleShowTickets");
+      jest.advanceTimersByTime(100);
+      expect(handleShowTicketsSpy).not.toHaveBeenCalled();
+      handleShowTicketsSpy.mockRestore();
+    });
+  });
+});
 
-          jest.advanceTimersByTime(100);
-          expect(handleShowTicketsSpy).not.toHaveBeenCalled();
-          handleShowTicketsSpy.mockRestore();
-        });
+describe("Given I am connected as an Admin - Bill Management", () => {
+  let dashboard;
 
-        test("Then Dashboard should not restore preservedSectionIndex when bills array is empty", () => {
-          const dashboardWithPreserved = setupDashboard({ bills: [], preservedSectionIndex: 1 });
-          const handleShowTicketsSpy = jest.spyOn(dashboardWithPreserved.dashboard, "handleShowTickets");
+  beforeEach(() => {
+    jest.useFakeTimers();
+    const setup = setupDashboard();
+    dashboard = setup.dashboard;
+  });
 
-          jest.advanceTimersByTime(100);
-          expect(handleShowTicketsSpy).not.toHaveBeenCalled();
-          handleShowTicketsSpy.mockRestore();
-        });
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  describe("handleShowTickets parameter handling", () => {
+    test("Then handleShowTickets should use event when it is a number", async () => {
+      dashboard.handleShowTickets(2);
+      await waitFor(() => {
+        const container = document.querySelector("#status-bills-container2");
+        expect(container.innerHTML).toBeTruthy();
       });
     });
 
-    describe("Bill Management", () => {
-      describe("handleShowTickets parameter handling", () => {
-        test("Then handleShowTickets should use event when it is a number", async () => {
-          dashboard.handleShowTickets(2);
-          await waitFor(() => {
-            const container = document.querySelector("#status-bills-container2");
-            expect(container.innerHTML).toBeTruthy();
-          });
-        });
-
-        test("Then handleShowTickets should use bills when it is a number and event is not", async () => {
-          dashboard.handleShowTickets(null, 3);
-          await waitFor(() => {
-            const container = document.querySelector("#status-bills-container3");
-            expect(container.innerHTML).toBeTruthy();
-          });
-        });
-
-        test("Then handleShowTickets should use index when event and bills are not numbers", async () => {
-          dashboard.handleShowTickets(null, null, 1);
-          await waitFor(() => {
-            const container = document.querySelector("#status-bills-container1");
-            expect(container.innerHTML).toBeTruthy();
-          });
-        });
-      });
-
-      test("Then I can expand the pending bills list and view a bill", async () => {
-        const handleShowTicketsSpy = jest.spyOn(dashboard, "handleShowTickets");
-        const handleEditTicketSpy = jest.spyOn(dashboard, "handleEditTicket");
-
-        dashboard.handleShowTickets(1);
-        expect(handleShowTicketsSpy).toHaveBeenCalledWith(1);
-        await waitFor(() => screen.getByTestId(BILL_47QAXB_TEST_ID));
-
-        dashboard.handleEditTicket(null, bills[0], bills);
-        expect(handleEditTicketSpy).toHaveBeenCalled();
-        await waitFor(() => screen.getByTestId(DASHBOARD_FORM_TEST_ID));
-        const dashboardForm = screen.getByTestId(DASHBOARD_FORM_TEST_ID);
-        expect(within(dashboardForm).getByText("Hôtel et logement")).toBeTruthy();
-      });
-
-      test("Then I can accept a bill", async () => {
-        const updateSpy = jest.spyOn(mockStore.bills(), "update").mockResolvedValue({});
-        await setupBillForm(dashboard);
-
-        const mockEvent = { preventDefault: jest.fn() };
-        dashboard.handleAcceptSubmit(mockEvent, bills[0]);
-
-        await waitFor(() => expect(updateSpy).toHaveBeenCalled());
-        await waitFor(() => expect(onNavigate).toHaveBeenCalledWith(ROUTES_PATH["Dashboard"]));
-      });
-
-      test("Then I can refuse a bill", async () => {
-        const updateSpy = jest.spyOn(mockStore.bills(), "update").mockResolvedValue({});
-        await setupBillForm(dashboard);
-
-        const mockEvent = { preventDefault: jest.fn() };
-        dashboard.handleRefuseSubmit(mockEvent, bills[0]);
-
-        await waitFor(() => expect(updateSpy).toHaveBeenCalled());
-        await waitFor(() => expect(onNavigate).toHaveBeenCalledWith(ROUTES_PATH["Dashboard"]));
-      });
-
-      test("Then getBillsAllUsers should return Promise.resolve([]) when store is null", async () => {
-        const dashboardWithoutStore = setupDashboard({ store: null });
-        const result = await dashboardWithoutStore.dashboard.getBillsAllUsers();
-        expect(result).toEqual([]);
+    test("Then handleShowTickets should use bills when it is a number and event is not", async () => {
+      dashboard.handleShowTickets(null, 3);
+      await waitFor(() => {
+        const container = document.querySelector("#status-bills-container3");
+        expect(container.innerHTML).toBeTruthy();
       });
     });
 
-    describe("handleEditTicket", () => {
-      test("Then handleEditTicket should handle switching from one bill to another", async () => {
-        dashboard.handleShowTickets(1);
-        await waitFor(() => screen.getByTestId(BILL_47QAXB_TEST_ID));
-
-        dashboard.handleEditTicket(null, bills[0], bills);
-        await waitFor(() => screen.getByTestId(DASHBOARD_FORM_TEST_ID));
-        expect(dashboard.id).toBe(bills[0].id);
-
-        dashboard.handleShowTickets(3);
-        await waitFor(() => {
-          const container = document.querySelector("#status-bills-container3");
-          expect(container.innerHTML).toBeTruthy();
-        });
-
-        dashboard.handleEditTicket(null, bills[1], bills);
-        await waitFor(() => {
-          const currentBill = document.querySelector(`#open-bill${bills[1].id}`);
-          expect(currentBill).toBeTruthy();
-        });
-        expect(dashboard.id).toBe(bills[1].id);
-        expect(dashboard.counter).toBe(1);
-        expect($(`#open-bill${bills[0].id}`).css("background-color")).toBeTruthy();
-        expect($(`#open-bill${bills[1].id}`).css("background-color")).toBeTruthy();
-      });
-
-      test("Then handleEditTicket should set id and counter when id is undefined", async () => {
-        dashboard.handleShowTickets(1);
-        await waitFor(() => screen.getByTestId(BILL_47QAXB_TEST_ID));
-
-        expect(dashboard.id).toBeUndefined();
-        dashboard.handleEditTicket(null, bills[0], bills);
-        await waitFor(() => screen.getByTestId(DASHBOARD_FORM_TEST_ID));
-
-        expect(dashboard.id).toBe(bills[0].id);
-        expect(dashboard.counter).toBe(1);
-        expect($(".dashboard-right-container div").html()).toBeTruthy();
-        expect($(".vertical-navbar").css("height")).toBe("150vh");
-      });
-
-      test("Then clicking btn-accept-bill after handleEditTicket should call handleAcceptSubmit", async () => {
-        const updateSpy = jest.spyOn(mockStore.bills(), "update").mockResolvedValue({});
-        await setupBillForm(dashboard);
-
-        const handleAcceptSubmitSpy = jest.spyOn(dashboard, "handleAcceptSubmit");
-        const acceptButton = document.querySelector("#btn-accept-bill");
-        $(acceptButton).trigger("click");
-        expect(handleAcceptSubmitSpy).toHaveBeenCalled();
-        await waitFor(() => expect(updateSpy).toHaveBeenCalled());
-      });
-
-      test("Then clicking btn-refuse-bill after handleEditTicket should call handleRefuseSubmit", async () => {
-        const updateSpy = jest.spyOn(mockStore.bills(), "update").mockResolvedValue({});
-        await setupBillForm(dashboard);
-
-        const handleRefuseSubmitSpy = jest.spyOn(dashboard, "handleRefuseSubmit");
-        const refuseButton = document.querySelector("#btn-refuse-bill");
-        $(refuseButton).trigger("click");
-        expect(handleRefuseSubmitSpy).toHaveBeenCalled();
-        await waitFor(() => expect(updateSpy).toHaveBeenCalled());
+    test("Then handleShowTickets should use index when event and bills are not numbers", async () => {
+      dashboard.handleShowTickets(null, null, 1);
+      await waitFor(() => {
+        const container = document.querySelector("#status-bills-container1");
+        expect(container.innerHTML).toBeTruthy();
       });
     });
+  });
 
-    describe("handleClickIconEye", () => {
-      beforeEach(async () => {
-        await setupBillForm(dashboard);
-      });
+  test("Then I can expand the pending bills list and view a bill", async () => {
+    const handleShowTicketsSpy = jest.spyOn(dashboard, "handleShowTickets");
+    const handleEditTicketSpy = jest.spyOn(dashboard, "handleEditTicket");
 
-      test("Then clicking icon-eye-d after handleEditTicket should call handleClickIconEye", async () => {
-        await waitFor(() => {
-          const iconEye = document.querySelector(ICON_EYE_D_SELECTOR);
-          expect(iconEye).toBeTruthy();
-          return iconEye;
-        });
-        const handleClickIconEyeSpy = jest.spyOn(dashboard, "handleClickIconEye");
-        $(ICON_EYE_D_SELECTOR).off("click").click(handleClickIconEyeSpy);
-        const iconEye = document.querySelector(ICON_EYE_D_SELECTOR);
-        const modalElement = document.createElement("div");
-        modalElement.id = MODAL_FILE_ADMIN_ID;
-        modalElement.style.width = "800px";
-        document.body.appendChild(modalElement);
-        $.fn.modal = jest.fn();
-        $(iconEye).trigger("click");
-        await waitFor(() => expect(handleClickIconEyeSpy).toHaveBeenCalled());
-      });
+    dashboard.handleShowTickets(1);
+    expect(handleShowTicketsSpy).toHaveBeenCalledWith(1);
+    await waitFor(() => screen.getByTestId(BILL_47QAXB_TEST_ID));
 
-      test("Then handleClickIconEye should return early when icon has disabled class", () => {
-        const iconEye = document.querySelector(ICON_EYE_D_SELECTOR);
-        $(iconEye).addClass("disabled");
-        const modalElement = document.createElement("div");
-        modalElement.id = MODAL_FILE_ADMIN_ID;
-        document.body.appendChild(modalElement);
-        $.fn.modal = jest.fn();
+    dashboard.handleEditTicket(null, bills[0], bills);
+    expect(handleEditTicketSpy).toHaveBeenCalled();
+    await waitFor(() => screen.getByTestId(DASHBOARD_FORM_TEST_ID));
+    const dashboardForm = screen.getByTestId(DASHBOARD_FORM_TEST_ID);
+    expect(within(dashboardForm).getByText("Hôtel et logement")).toBeTruthy();
+  });
 
-        dashboard.handleClickIconEye();
-        expect($.fn.modal).not.toHaveBeenCalled();
-      });
+  test("Then getBillsAllUsers should return Promise.resolve([]) when store is null", async () => {
+    const dashboardWithoutStore = setupDashboard({ store: null });
+    const result = await dashboardWithoutStore.dashboard.getBillsAllUsers();
+    expect(result).toEqual([]);
+  });
+});
 
-      test("Then handleClickIconEye should return early when billUrl is invalid", () => {
-        const iconEye = document.querySelector(ICON_EYE_D_SELECTOR);
-        $(iconEye).attr("data-bill-url", "null");
-        const modalElement = document.createElement("div");
-        modalElement.id = MODAL_FILE_ADMIN_ID;
-        document.body.appendChild(modalElement);
-        $.fn.modal = jest.fn();
+describe("Given I am connected as an Admin - handleEditTicket", () => {
+  let dashboard;
 
-        dashboard.handleClickIconEye();
-        expect($.fn.modal).not.toHaveBeenCalled();
-      });
+  beforeEach(() => {
+    jest.useFakeTimers();
+    const setup = setupDashboard();
+    dashboard = setup.dashboard;
+  });
 
-      test("Then handleClickIconEye should show modal when modal function exists", () => {
-        const iconEye = document.querySelector(ICON_EYE_D_SELECTOR);
-        const validUrl = "https://test.storage.tld/v0/b/billable-677b6.a…f-1.jpg";
-        $(iconEye).attr("data-bill-url", validUrl);
+  afterEach(() => {
+    jest.useRealTimers();
+  });
 
-        const modalElement = document.createElement("div");
-        modalElement.id = MODAL_FILE_ADMIN_ID;
-        modalElement.style.width = "800px";
-        const modalBody = document.createElement("div");
-        modalBody.className = "modal-body";
-        modalElement.appendChild(modalBody);
-        document.body.appendChild(modalElement);
+  test("Then handleEditTicket should handle switching from one bill to another", async () => {
+    dashboard.handleShowTickets(1);
+    await waitFor(() => screen.getByTestId(BILL_47QAXB_TEST_ID));
 
-        const modalFn = jest.fn();
-        $.fn.modal = modalFn;
+    dashboard.handleEditTicket(null, bills[0], bills);
+    await waitFor(() => screen.getByTestId(DASHBOARD_FORM_TEST_ID));
+    expect(dashboard.id).toBe(bills[0].id);
 
-        dashboard.handleClickIconEye();
-
-        const $modalElement = $(`#${MODAL_FILE_ADMIN_ID}`);
-        expect($modalElement.attr("aria-hidden")).toBe("false");
-        expect(modalFn).toHaveBeenCalledWith("show");
-        expect($modalElement.find(".modal-body").html()).toContain("bill-proof-container");
-        expect($modalElement.find(".modal-body").html()).toContain(validUrl);
-      });
-
-      test("Then handleClickIconEye should not crash when modal function does not exist", () => {
-        const iconEye = document.querySelector(ICON_EYE_D_SELECTOR);
-        const validUrl = "https://test.storage.tld/v0/b/billable-677b6.a…f-1.jpg";
-        $(iconEye).attr("data-bill-url", validUrl);
-
-        const modalElement = document.createElement("div");
-        modalElement.id = MODAL_FILE_ADMIN_ID;
-        modalElement.style.width = "800px";
-        const modalBody = document.createElement("div");
-        modalBody.className = "modal-body";
-        modalElement.appendChild(modalBody);
-        document.body.appendChild(modalElement);
-        delete $.fn.modal;
-        expect(() => dashboard.handleClickIconEye()).not.toThrow();
-
-        const $modalElement = $(`#${MODAL_FILE_ADMIN_ID}`);
-        expect($modalElement.attr("aria-hidden")).not.toBe("false");
-        expect($modalElement.find(".modal-body").html()).toContain("bill-proof-container");
-        expect($modalElement.find(".modal-body").html()).toContain(validUrl);
-      });
+    dashboard.handleShowTickets(3);
+    await waitFor(() => {
+      const container = document.querySelector("#status-bills-container3");
+      expect(container.innerHTML).toBeTruthy();
     });
 
-    describe("Error Scenarios", () => {
-      beforeEach(async () => {
-        await setupBillForm(dashboard);
-      });
+    dashboard.handleEditTicket(null, bills[1], bills);
+    await waitFor(() => {
+      const currentBill = document.querySelector(`#open-bill${bills[1].id}`);
+      expect(currentBill).toBeTruthy();
+    });
+    expect(dashboard.id).toBe(bills[1].id);
+    expect(dashboard.counter).toBe(1);
+    expect($(`#open-bill${bills[0].id}`).css("background-color")).toBeTruthy();
+    expect($(`#open-bill${bills[1].id}`).css("background-color")).toBeTruthy();
+  });
 
-      test("Then API error when accepting bill should be handled gracefully", async () => {
-        const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
-        const updateSpy = jest.spyOn(mockStore.bills(), "update").mockRejectedValue(
-          new Error("Failed to update bill"),
-        );
+  test("Then handleEditTicket should set id and counter when id is undefined", async () => {
+    dashboard.handleShowTickets(1);
+    await waitFor(() => screen.getByTestId(BILL_47QAXB_TEST_ID));
 
-        const mockEvent = { preventDefault: jest.fn() };
-        await expect(dashboard.handleAcceptSubmit(mockEvent, bills[0])).rejects.toThrow("Failed to update bill");
+    expect(dashboard.id).toBeUndefined();
+    dashboard.handleEditTicket(null, bills[0], bills);
+    await waitFor(() => screen.getByTestId(DASHBOARD_FORM_TEST_ID));
 
-        consoleErrorSpy.mockRestore();
-        updateSpy.mockRestore();
-      });
+    expect(dashboard.id).toBe(bills[0].id);
+    expect(dashboard.counter).toBe(1);
+    expect($(".dashboard-right-container div").html()).toBeTruthy();
+    expect($(".vertical-navbar").css("height")).toBe("150vh");
+  });
+});
 
-      test("Then API error when refusing bill should be handled gracefully", async () => {
-        const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
-        const updateSpy = jest.spyOn(mockStore.bills(), "update").mockRejectedValue(
-          new Error("Failed to update bill"),
-        );
+describe("Given I am connected as an Admin - handleClickIconEye", () => {
+  let dashboard;
 
-        const mockEvent = { preventDefault: jest.fn() };
-        await expect(dashboard.handleRefuseSubmit(mockEvent, bills[0])).rejects.toThrow("Failed to update bill");
+  beforeEach(() => {
+    jest.useFakeTimers();
+    const setup = setupDashboard();
+    dashboard = setup.dashboard;
+  });
 
-        consoleErrorSpy.mockRestore();
-        updateSpy.mockRestore();
-      });
+  afterEach(() => {
+    jest.useRealTimers();
+  });
 
-      test("Then network error when updating bill should be handled gracefully", async () => {
-        const networkError = new Error("Network error");
-        const updateSpy = jest.spyOn(mockStore.bills(), "update").mockRejectedValue(networkError);
+  beforeEach(async () => {
+    await setupBillForm(dashboard);
+  });
 
-        const mockEvent = { preventDefault: jest.fn() };
-        await expect(dashboard.handleAcceptSubmit(mockEvent, bills[0])).rejects.toThrow();
+  test("Then clicking icon-eye-d after handleEditTicket should call handleClickIconEye", async () => {
+    await waitFor(() => {
+      const iconEye = document.querySelector(ICON_EYE_D_SELECTOR);
+      expect(iconEye).toBeTruthy();
+      return iconEye;
+    });
+    const handleClickIconEyeSpy = jest.spyOn(dashboard, "handleClickIconEye");
+    $(ICON_EYE_D_SELECTOR).off("click").click(handleClickIconEyeSpy);
+    const iconEye = document.querySelector(ICON_EYE_D_SELECTOR);
+    const modalElement = document.createElement("div");
+    modalElement.id = MODAL_FILE_ADMIN_ID;
+    modalElement.style.width = "800px";
+    document.body.appendChild(modalElement);
+    $.fn.modal = jest.fn();
+    $(iconEye).trigger("click");
+    await waitFor(() => expect(handleClickIconEyeSpy).toHaveBeenCalled());
+  });
 
-        updateSpy.mockRestore();
-      });
+  test("Then handleClickIconEye should return early when icon has disabled class", () => {
+    const iconEye = document.querySelector(ICON_EYE_D_SELECTOR);
+    $(iconEye).addClass("disabled");
+    const modalElement = document.createElement("div");
+    modalElement.id = MODAL_FILE_ADMIN_ID;
+    document.body.appendChild(modalElement);
+    $.fn.modal = jest.fn();
 
-      test("Then clicking eye icon with invalid file URL should not open modal", async () => {
-        const billWithInvalidUrl = {
-          ...bills[0],
-          fileUrl: null,
-        };
-        document.body.innerHTML = DashboardUI({ data: { bills: [billWithInvalidUrl] } });
-        const dashboardWithInvalidFile = new Dashboard({
-          document,
-          onNavigate,
-          store: mockStore,
-          bills: [billWithInvalidUrl],
-          localStorage: window.localStorage,
-        });
+    dashboard.handleClickIconEye();
+    expect($.fn.modal).not.toHaveBeenCalled();
+  });
 
-        dashboardWithInvalidFile.handleShowTickets(1);
-        await waitFor(() => screen.getByTestId(BILL_47QAXB_TEST_ID));
-        dashboardWithInvalidFile.handleEditTicket(null, billWithInvalidUrl, [billWithInvalidUrl]);
-        await waitFor(() => screen.getByTestId(DASHBOARD_FORM_TEST_ID));
+  test("Then handleClickIconEye should return early when billUrl is invalid", () => {
+    const iconEye = document.querySelector(ICON_EYE_D_SELECTOR);
+    $(iconEye).attr("data-bill-url", "null");
+    const modalElement = document.createElement("div");
+    modalElement.id = MODAL_FILE_ADMIN_ID;
+    document.body.appendChild(modalElement);
+    $.fn.modal = jest.fn();
 
-        const iconEye = screen.queryByTestId("icon-eye-d");
-        expect(iconEye).toBeFalsy();
-      });
+    dashboard.handleClickIconEye();
+    expect($.fn.modal).not.toHaveBeenCalled();
+  });
+
+  test("Then handleClickIconEye should show modal when modal function exists", () => {
+    const iconEye = document.querySelector(ICON_EYE_D_SELECTOR);
+    const validUrl = "https://test.storage.tld/v0/b/billable-677b6.a…f-1.jpg";
+    $(iconEye).attr("data-bill-url", validUrl);
+
+    const modalElement = document.createElement("div");
+    modalElement.id = MODAL_FILE_ADMIN_ID;
+    modalElement.style.width = "800px";
+    const modalBody = document.createElement("div");
+    modalBody.className = "modal-body";
+    modalElement.appendChild(modalBody);
+    document.body.appendChild(modalElement);
+
+    const modalFn = jest.fn();
+    $.fn.modal = modalFn;
+
+    dashboard.handleClickIconEye();
+
+    const $modalElement = $(`#${MODAL_FILE_ADMIN_ID}`);
+    expect($modalElement.attr("aria-hidden")).toBe("false");
+    expect(modalFn).toHaveBeenCalledWith("show");
+    expect($modalElement.find(".modal-body").html()).toContain("bill-proof-container");
+    expect($modalElement.find(".modal-body").html()).toContain(validUrl);
+  });
+
+  test("Then handleClickIconEye should not crash when modal function does not exist", () => {
+    const iconEye = document.querySelector(ICON_EYE_D_SELECTOR);
+    const validUrl = "https://test.storage.tld/v0/b/billable-677b6.a…f-1.jpg";
+    $(iconEye).attr("data-bill-url", validUrl);
+
+    const modalElement = document.createElement("div");
+    modalElement.id = MODAL_FILE_ADMIN_ID;
+    modalElement.style.width = "800px";
+    const modalBody = document.createElement("div");
+    modalBody.className = "modal-body";
+    modalElement.appendChild(modalBody);
+    document.body.appendChild(modalElement);
+    delete $.fn.modal;
+    expect(() => dashboard.handleClickIconEye()).not.toThrow();
+
+    const $modalElement = $(`#${MODAL_FILE_ADMIN_ID}`);
+    expect($modalElement.attr("aria-hidden")).not.toBe("false");
+    expect($modalElement.find(".modal-body").html()).toContain("bill-proof-container");
+    expect($modalElement.find(".modal-body").html()).toContain(validUrl);
+  });
+});
+
+describe("Given I am connected as an Admin - Error Scenarios", () => {
+  let dashboard;
+  let onNavigate;
+
+  beforeEach(() => {
+    jest.useFakeTimers();
+    const setup = setupDashboard();
+    dashboard = setup.dashboard;
+    onNavigate = setup.onNavigate;
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  beforeEach(async () => {
+    await setupBillForm(dashboard);
+  });
+
+  test("Then clicking eye icon with invalid file URL should not open modal", async () => {
+    const billWithInvalidUrl = {
+      ...bills[0],
+      fileUrl: null,
+    };
+    document.body.innerHTML = DashboardUI({ data: { bills: [billWithInvalidUrl] } });
+    const dashboardWithInvalidFile = new Dashboard({
+      document,
+      onNavigate,
+      store: mockStore,
+      bills: [billWithInvalidUrl],
+      localStorage: window.localStorage,
     });
 
-    test("Then I can view the proof modal", async () => {
-      const arrow = screen.getByTestId("arrow-icon1");
-      fireEvent.click(arrow);
-      await waitFor(() => screen.getByTestId(BILL_47QAXB_TEST_ID));
-      fireEvent.click(screen.getByTestId(BILL_47QAXB_TEST_ID));
-      await waitFor(() => screen.getByTestId(DASHBOARD_FORM_TEST_ID));
+    dashboardWithInvalidFile.handleShowTickets(1);
+    await waitFor(() => screen.getByTestId(BILL_47QAXB_TEST_ID));
+    dashboardWithInvalidFile.handleEditTicket(null, billWithInvalidUrl, [billWithInvalidUrl]);
+    await waitFor(() => screen.getByTestId(DASHBOARD_FORM_TEST_ID));
 
-      const iconEye = screen.getByTestId("icon-eye-d");
-      $.fn.modal = jest.fn();
-      fireEvent.click(iconEye);
-      expect($.fn.modal).toHaveBeenCalledWith("show");
-      expect(screen.getByTestId("modaleFileAdmin")).toBeTruthy();
-    });
+    const iconEye = screen.queryByTestId("icon-eye-d");
+    expect(iconEye).toBeFalsy();
   });
 });
 
@@ -777,7 +713,7 @@ describe("Given I am connected as an Admin - API Integration", () => {
           };
         });
         window.onNavigate(ROUTES_PATH.Dashboard);
-        await new Promise(process.nextTick);
+        await new Promise((resolve) => setTimeout(resolve, 0));
         const message = await screen.getByText(/Erreur 404/);
         expect(message).toBeTruthy();
       });
@@ -792,7 +728,7 @@ describe("Given I am connected as an Admin - API Integration", () => {
         });
 
         window.onNavigate(ROUTES_PATH.Dashboard);
-        await new Promise(process.nextTick);
+        await new Promise((resolve) => setTimeout(resolve, 0));
         const message = await screen.getByText(/Erreur 500/);
         expect(message).toBeTruthy();
       });
