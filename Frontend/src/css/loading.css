@@ -1,5 +1,6 @@
 #loading {
+  left: 50%;
   position: absolute;
-  top: 40%; left: 50%;
   text-align: center;
+  top: 40%;
 }

@@ -1,32 +1,28 @@
-import VerticalLayout from './VerticalLayout.js'
-import ErrorPage from "./ErrorPage.js"
-import LoadingPage from "./LoadingPage.js"
-
-import Actions from './Actions.js'
+import Actions from "./Actions.js";
+import ErrorPage from "./ErrorPage.js";
+import LoadingPage from "./LoadingPage.js";
+import VerticalLayout from "./VerticalLayout.js";
 
 const row = (bill) => {
-  return (`
+  return `
     <tr>
       <td>${bill.type}</td>
       <td>${bill.name}</td>
       <td>${bill.date}</td>
       <td>${bill.amount} €</td>
       <td>${bill.status}</td>
-      <td>
-        ${Actions(bill.fileUrl)}
-      </td>
+      <td>${Actions(bill.fileUrl)}</td>
     </tr>
-    `)
-  }
+  `;
+};
 
 const rows = (data) => {
-  return (data && data.length) ? data.map(bill => row(bill)).join("") : ""
-}
+  return data && data.length ? data.map((bill) => row(bill)).join("") : "";
+};
 
 export default ({ data: bills, loading, error }) => {
-  
-  const modal = () => (`
-    <div class="modal fade" id="modaleFile" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+  const modal = () => `
+    <div class="modal fade" id="modaleFile" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
           <div class="modal-header">
@@ -40,25 +36,33 @@ export default ({ data: bills, loading, error }) => {
         </div>
       </div>
     </div>
-  `)
+  `;
 
   if (loading) {
-    return LoadingPage()
+    return LoadingPage();
   } else if (error) {
-    return ErrorPage(error)
+    return ErrorPage(error);
   }
-  
-  return (`
-    <div class='layout'>
-      ${VerticalLayout(120)}
-      <div class='content'>
-        <div class='content-header'>
-          <div class='content-title'> Mes notes de frais </div>
-          <button type="button" data-testid='btn-new-bill' class="btn btn-primary">Nouvelle note de frais</button>
+  // Bug 1 - Bills : Corriger l'ordre des notes de frais
+  const sortedBills = bills
+  ? [...bills].sort((a, b) => {
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      return dateB - dateA;
+    })
+  : bills;
+
+  return `
+    <div class="layout">
+      ${VerticalLayout()}
+      <div class="content">
+        <div class="content-header">
+          <div class="content-title">Mes notes de frais</div>
+          <button type="button" data-testid="btn-new-bill" class="btn btn-primary">Nouvelle note de frais</button>
         </div>
         <div id="data-table">
-        <table id="example" class="table table-striped" style="width:100%">
-          <thead>
+          <table id="example" class="table table-striped">
+            <thead>
               <tr>
                 <th>Type</th>
                 <th>Nom</th>
@@ -67,14 +71,13 @@ export default ({ data: bills, loading, error }) => {
                 <th>Statut</th>
                 <th>Actions</th>
               </tr>
-          </thead>
-          <tbody data-testid="tbody">
-            ${rows(bills)}
-          </tbody>
+            </thead>
+            <tbody data-testid="tbody">
+              ${rows(sortedBills)}
+            </tbody>
           </table>
         </div>
       </div>
       ${modal()}
-    </div>`
-  )
-}
+    </div>`;
+};

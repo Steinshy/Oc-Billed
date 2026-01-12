@@ -1,71 +1,85 @@
 .page-div {
-  width: 80%;
-  margin:auto;
-  margin-top: 40px;
+  margin: auto;
   margin-top: 10%;
+  width: 80%;
 }
 
 .form-signin {
-  width: 100%;
+  margin: auto;
   max-width: 330px;
   padding: 15px;
-  margin: auto;
-
+  width: 100%;
 }
 
 h2 {
-  padding-top: 40px;
   padding-bottom: 40px;
+  padding-top: 40px;
 }
 
 .form-signin .checkbox {
   font-weight: 400;
 }
+
 .form-signin .form-control {
-  position: relative;
   box-sizing: border-box;
-  padding: 10px;
   font-size: 16px;
+  padding: 10px;
+  position: relative;
 }
+
 .form-signin .form-control:focus {
   z-index: 2;
 }
+
 .form-signin input[type="email"] {
-  margin-bottom: -1px;
-  border-bottom-right-radius: 0;
   border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  margin-bottom: -1px;
 }
+
 .form-signin input[type="password"] {
-  margin-bottom: 10px;
   border-top-left-radius: 0;
   border-top-right-radius: 0;
+  margin-bottom: 10px;
 }
+
 .card-body{
-  margin-bottom: 50px;
   border-radius: 50px;
+  margin-bottom: 50px;
 }
+
 .card {
+  margin: auto;
   max-width: 500px;
-  margin:auto;
 }
+
 label {
-  padding-top:8px;
-  padding-bottom:8px;
+  padding-bottom: 8px;
+  padding-top: 8px;
 }
+
 input {
-  padding-top:8px;
-  padding-bottom:8px;
+  padding-bottom: 8px;
+  padding-top: 8px;
 }
+
 .title-container {
-  width: 200px;
-  margin:auto;
+  color: #fff;
   display: flex;
-  color: white;
+  margin: auto;
+  width: 200px;
 }
+
 .title-container h1 {
-  margin-left: 16px;
   margin-bottom: 60px;
+  margin-left: 16px;
 }
+
 button {
+  background-color: #0E5AE5;
+}
+
+[data-testid="employee-login-button"],
+[data-testid="admin-login-button"] {
   background-color: #0E5AE5;
 }

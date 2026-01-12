@@ -2,6 +2,15 @@
   cursor: pointer;
 }
 
+#eye.icon-disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+#eye.icon-disabled svg path {
+  fill: #979797;
+}
+
 #download {
   cursor: pointer;
 }

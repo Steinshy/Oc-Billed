@@ -1,0 +1,15 @@
+body {
+  align-items: center;
+  background-color: #fff;
+  display: flex;
+  font-family: Roboto, sans-serif;
+}
+
+body.login-page {
+  background-color: #0E5AE5;
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+}

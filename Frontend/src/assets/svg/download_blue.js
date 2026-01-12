@@ -1,5 +1,4 @@
-export default `
-  <svg xmlns="http://www.w3.org/2000/svg"
+export default `<svg xmlns="http://www.w3.org/2000/svg"
       width="0.155556in" height="0.188889in"
       viewBox="0 0 14 17">
     <path id="Imported Path"
@@ -17,5 +16,5 @@ export default `
               0.00,17.00 14.00,17.00 14.00,17.00
               14.00,17.00 14.00,15.00 14.00,15.00
               14.00,15.00 0.00,15.00 0.00,15.00 Z" />
-  </svg>
-`
+  </svg>`;
+

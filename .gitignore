@@ -5,9 +5,14 @@
 .cursor
 Backend/CLAUDE.md
 Backend/database_test.sqlite
+Backend/database_dev.sqlite
 Backend/node_modules/
 Backend/coverage/
+Backend/public
 Frontend/CLAUDE.md
 Frontend/node_modules
 Frontend/coverage
 Frontend/.idea
+Frontend/.stryker-tmp
+Frontend/test-report.html
+Frontend/reports

@@ -1,10 +1,10 @@
 const request = require("supertest");
 const app = require("../app");
-const jwt = require("../services/jwt")
+const jwt = require("../services/jwt");
 
 const jwtValue = jwt.encrypt({
-    userId: 1,
-    email: "john-doe@domain.tld"
+  userId: 1,
+  email: "john-doe@domain.tld",
 });
 
 describe("Test the root path", () => {
@@ -39,7 +39,7 @@ describe("Test the root path", () => {
   test("It should loggout a user", () => {
     return request(app)
       .patch("/auth/loggout")
-      .set('Authorization', `Bearer ${jwtValue}`)
+      .set("Authorization", `Bearer ${jwtValue}`)
       .set("Accept", "application/json")
       .expect(200);
   });

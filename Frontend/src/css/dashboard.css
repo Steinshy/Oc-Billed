@@ -4,29 +4,29 @@
 }
 
 .dashboard-right-container {
-  position: absolute;
-  left: 530px;
-  top: 50px;
   border: 2px solid #F3F5FA;
-  box-sizing: border-box;
   border-radius: 10px;
-  padding: 23px;
-  width: calc(100% - 550px);
+  box-sizing: border-box;
+  left: 530px;
   min-height: calc(100% - 92px);
+  padding: 23px;
+  position: absolute;
+  top: 50px;
+  width: calc(100% - 550px);
 }
 
 .dashboard-form-container h3 {
+  font-size: 24px;
   font-style: normal;
   font-weight: 500;
-  font-size: 24px;
   line-height: 28px;
 }
 
 .bills-feed {
-  width: 390px;
-  position: absolute;
   left: 120px;
+  position: absolute;
   top: 52px;
+  width: 390px;
 }
 
 .status-bills-container {
@@ -35,29 +35,31 @@
 }
 
 .status-bills-header {
+  align-items: center;
+  cursor: pointer;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  user-select: none;
 }
 
 .status-bills-container h3 {
-  font-weight: 500;
-  font-size: 24px;
-  line-height: 28px;
-  display: flex;
   align-items: center;
+  display: flex;
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 28px;
 }
 
 .bill-card {
-  margin-top: 17px;
-  margin-bottom: 17px;
   background: #0D5AE5;
   border-radius: 8px;
-  padding: 17px;
   color: #fff;
-  line-height: 25px;
-  letter-spacing: 0.2px;
   cursor: pointer;
+  letter-spacing: 0.2px;
+  line-height: 25px;
+  margin-bottom: 17px;
+  margin-top: 17px;
+  padding: 17px;
 }
 
 .bill-card-name-container {
@@ -66,39 +68,38 @@
 }
 
 .bill-card-name {
-  font-weight: 500;
   font-size: 14px;
+  font-weight: 500;
 }
 
 .bill-card-grey {
+  cursor: pointer;
   mix-blend-mode: normal;
   opacity: 0.4;
-  cursor: pointer;
 }
 
 .name-price-container {
+  display: flex;
+  font-size: 14px;
   font-style: normal;
   font-weight: 300;
-  font-size: 14px;
-  display: flex;
   justify-content: space-between;
 }
 
 .date-type-container {
+  display: flex;
+  font-size: 12px;
   font-style: normal;
   font-weight: normal;
-  font-size: 12px;
+  justify-content: space-between;
   mix-blend-mode: normal;
   opacity: 0.6;
-  display: flex;
-  justify-content: space-between;
 }
 
 .centered-svg-container{
   display: flex;
-  justify-content: center;
-  align-content: center;
   height: 100vh;
+  place-content: center;
 }
 
 #big-billed-icon {
@@ -107,13 +108,35 @@
 }
 
 .dashboard-svg-container {
+  left: 50%;
   position: absolute;
-  top: 40%; left: 50%;
+  top: 40%;
   transform: translate(-50%,-40%);
 }
 
 .arrow-icon {
-  transform: rotate(90deg);
+  align-items: center;
   cursor: pointer;
+  display: flex;
+  margin: -4px;
+  min-height: 24px;
+  min-width: 24px;
+  padding: 4px;
+  pointer-events: auto;
+  transform: rotate(90deg);
 }
 
+.status-bills-header h3 {
+  pointer-events: none;
+  user-select: none;
+}
+
+.status-bills-header .arrow-icon svg {
+  height: 100%;
+  pointer-events: none;
+  width: 100%;
+}
+
+.status-bills-container + .status-bills-header {
+  margin-top: 20px;
+}

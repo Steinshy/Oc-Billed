@@ -3,19 +3,19 @@
 }
 
 .vertical-navbar {
-  width: 80px;
   background-color: #0E5AE5;
   color: #fff;
-  height: 150vh;
+  height: 120vh;
+  width: 80px;
 }
 
 .layout-title {
-  position: relative;
-  top: 80px;
+  font-size: 32px;
   font-style: normal;
   font-weight: 500;
-  font-size: 32px;
   line-height: 37px;
+  position: relative;
+  top: 80px;
   transform: rotate(-90deg);
 }
 
@@ -32,20 +32,20 @@
 }
 
 #layout-disconnect {
+  bottom: 20px;
+  cursor: pointer;
+  left: 30px;
   position: fixed;
   text-align: center;
-  cursor: pointer;
-  bottom: 20px;
-  left: 30px;
 }
 
 .active-icon {
-  background-color: #7bb1f7;
-  width: 40px;
-  height: 40px;
-  display: flex;
   align-items: center;
-  justify-content: center;
-  margin:auto;
+  background-color: #7bb1f7;
   border-radius: 8px;
+  display: flex;
+  height: 40px;
+  justify-content: center;
+  margin: auto;
+  width: 40px;
 }

@@ -1,20 +1,18 @@
-
 .dashboard-form label{
   margin-top: 20px;
 }
 
 .input-field {
+  align-items: center;
   background: #f9f9f9;
   border-radius: 5px;
+  color: #0D5AE5;
+  display: flex;
+  font-size: 16px;
   font-style: normal;
   font-weight: normal;
-  font-size: 16px;
   line-height: 15px;
-  display: flex;
-  align-items: center;
-  color: #0D5AE5;
   padding: 20px;
-  border-radius: 5px;
 }
 
 .input-flex{
@@ -25,14 +23,14 @@
 .textarea-field{
   background: #f9f9f9;
   border-radius: 5px;
+  color: #0D5AE5;
+  font-size: 16px;
   font-style: normal;
   font-weight: normal;
-  font-size: 16px;
+  height: 300px;
   line-height: 15px;
-  color: #0D5AE5;
-  padding: 20px;
-  border-radius: 5px;
   overflow-y: auto;
+  padding: 20px;
 }
 
 #vat-flex-container {
@@ -45,14 +43,14 @@
 }
 
 .file-flex {
-  min-width: 325px;
-  max-width: 450px;
   background: #0D5AE5;
-  opacity: 0.5;
   border: 2px solid #0D5AE5;
-  box-sizing: border-box;
   border-radius: 5px;
+  box-sizing: border-box;
   color: #fff;
+  max-width: 450px;
+  min-width: 325px;
+  opacity: 0.5;
 }
 
 .icons-container span {
@@ -64,11 +62,12 @@
   justify-content: space-between;
   margin-top: 24px;
   max-width: 300px !important;
+  width: 300px;
 }
 
 .buttons-flex button{
-  width: 100px !important;
   background-color: #0D5AE5;
+  width: 100px !important;
 }
 
 #icon-eye-d {
@@ -81,4 +80,20 @@
 
 #file-name-admin {
   max-width: 300px;
+}
+
+.file-error-message {
+  color: #dc3545;
+  font-size: 14px;
+  margin-top: 8px;
+  text-align: center;
+}
+
+.file-error-message p {
+  margin: 0;
+  padding: 0;
+}
+
+.modal-body > div {
+  text-align: center;
 }

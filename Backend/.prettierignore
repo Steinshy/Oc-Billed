@@ -1,0 +1,15 @@
+node_modules
+dist
+dist-ssr
+*.local
+.vscode
+.idea
+package-lock.json
+yarn.lock
+coverage
+temp
+.stryker-tmp
+.oc
+benchmark-results
+public/*
+database/*
