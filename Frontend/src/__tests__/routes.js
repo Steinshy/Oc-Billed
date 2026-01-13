@@ -335,6 +335,35 @@ describe("Given I am on the login page", () => {
       expect(onNavigateSpy).not.toHaveBeenCalled();
       window.localStorage.getItem = originalGetItem;
     });
+
+    test("Then onNavigate should be called when user is logged in and not at login page", async () => {
+      setupTestEnvironment();
+      mockWindowLocation(ROUTES_PATH["Bills"], "");
+
+      const originalGetItem = window.localStorage.getItem.bind(window.localStorage);
+      window.localStorage.getItem = jest.fn((key) => {
+        if (key === "user")
+          return JSON.stringify({ email: "employee@example.com", type: "Employee" });
+        return originalGetItem(key);
+      });
+
+      Bills.mockImplementation(() => ({
+        getBills: () => Promise.resolve(bills),
+      }));
+
+      await Router();
+
+      const onNavigateSpy = jest.fn();
+      window.onNavigate = onNavigateSpy;
+
+      // Call onpopstate directly with a page other than "/"
+      // Simulate being on a non-root page when popstate occurs
+      window.history.pushState({}, "", ROUTES_PATH["Bills"]);
+      fireEvent.popState(window);
+
+      expect(onNavigateSpy).toHaveBeenCalled();
+      window.localStorage.getItem = originalGetItem;
+    });
   });
 
   describe("When Router initializes", () => {

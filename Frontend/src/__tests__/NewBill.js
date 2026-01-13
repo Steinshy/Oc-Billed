@@ -3,7 +3,6 @@ import "@testing-library/jest-dom";
 import { localStorageMock } from "../__mocks__/localStorage.js";
 import mockStore from "../__mocks__/store.js";
 import { NEW_BILL } from "../__mocks__/testConstants.js";
-import router from "../app/Router.js";
 import { ROUTES_PATH } from "../constants/routes.js";
 import NewBill from "../containers/NewBill.js";
 import NewBillUI from "../views/NewBillUI.js";
@@ -36,6 +35,46 @@ describe("Given I am connected as an employee", () => {
       const html = NewBillUI();
       document.body.innerHTML = html;
       expect(screen.getByTestId(FORM_NEW_BILL_TEST_ID)).toBeTruthy();
+    });
+
+    test("Then it should handle missing form gracefully", () => {
+      const consoleErrorSpy = jest
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+      document.body.innerHTML = "<div></div>";
+      const onNavigate = jest.fn();
+
+      new NewBill({
+        document,
+        onNavigate,
+        store: mockStore,
+        localStorage: window.localStorage,
+      });
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Form not found when initializing CreateNewBill",
+      );
+      consoleErrorSpy.mockRestore();
+    });
+
+    test("Then it should handle missing file input gracefully", () => {
+      const consoleErrorSpy = jest
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+      document.body.innerHTML = `<form data-testid="${FORM_NEW_BILL_TEST_ID}"></form>`;
+      const onNavigate = jest.fn();
+
+      new NewBill({
+        document,
+        onNavigate,
+        store: mockStore,
+        localStorage: window.localStorage,
+      });
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "File input not found when initializing CreateNewBill",
+      );
+      consoleErrorSpy.mockRestore();
     });
   });
 
@@ -87,6 +126,43 @@ describe("Given I am connected as an employee", () => {
         const errorMessage = document.querySelector(".file-error-message");
         expect(errorMessage).toBeNull();
       }
+    });
+
+  });
+
+  describe("When I select no file", () => {
+    test("Then it should reset file data", () => {
+      document.body.innerHTML = NewBillUI();
+      const onNavigate = jest.fn();
+      const newBillInstance = new NewBill({
+        document,
+        onNavigate,
+        store: mockStore,
+        localStorage: window.localStorage,
+      });
+
+      newBillInstance.fileUrl = "http://example.com/file.jpg";
+      newBillInstance.fileName = "test.jpg";
+      newBillInstance.billId = "123";
+
+      const changeEvent = new Event("change", { bubbles: true });
+      Object.defineProperty(changeEvent, "preventDefault", {
+        value: jest.fn(),
+      });
+      Object.defineProperty(changeEvent, "target", {
+        value: {
+          files: [],
+          value: "",
+        },
+        writable: false,
+      });
+
+      newBillInstance.handleFileChange(changeEvent);
+
+      expect(newBillInstance.fileUrl).toBeNull();
+      expect(newBillInstance.fileName).toBeNull();
+      expect(newBillInstance.filePath).toBeNull();
+      expect(newBillInstance.billId).toBeNull();
     });
   });
 
@@ -314,6 +390,56 @@ describe("Given I am connected as an employee", () => {
         expect(onNavigate).not.toHaveBeenCalled();
 
         consoleErrorSpy.mockRestore();
+      });
+
+      test("Then it should log error when update fails and handle the error", async () => {
+        const consoleErrorSpy = jest
+          .spyOn(console, "error")
+          .mockImplementation(() => {});
+        const consoleLogSpy = jest
+          .spyOn(console, "log")
+          .mockImplementation(() => {});
+        const updateError = new Error("Update failed");
+        const updateSpy = jest.fn(() => Promise.reject(updateError));
+        const errorStore = {
+          bills() {
+            return {
+              update: updateSpy,
+            };
+          },
+        };
+
+        const onNavigate = jest.fn();
+        const newBillInstance = new NewBill({
+          document,
+          onNavigate,
+          store: errorStore,
+          localStorage: window.localStorage,
+        });
+
+        newBillInstance.fileUrl = TEST_FILE_URL;
+        newBillInstance.fileName = TEST_FILE_NAME;
+        newBillInstance.billId = TEST_BILL_ID;
+        newBillInstance.userData = { type: EMPLOYEE_TYPE, email: TEST_EMAIL };
+
+        const form = screen.getByTestId(FORM_NEW_BILL_TEST_ID);
+        const submitEvent = {
+          preventDefault: jest.fn(),
+          target: form,
+        };
+
+        newBillInstance.handleFormSubmit(submitEvent);
+
+        await waitFor(() => {
+          expect(consoleErrorSpy).toHaveBeenCalledWith(
+            "Error updating bill:",
+            updateError,
+          );
+        });
+        expect(onNavigate).not.toHaveBeenCalled();
+
+        consoleErrorSpy.mockRestore();
+        consoleLogSpy.mockRestore();
       });
     });
   });

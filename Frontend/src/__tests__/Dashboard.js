@@ -613,6 +613,90 @@ describe("Given I am connected as an Admin - Error Scenarios", () => {
   });
 });
 
+describe("Given I am connected as an Admin - handleAcceptSubmit", () => {
+  let dashboard;
+  let onNavigate;
+
+  beforeEach(() => {
+    jest.useFakeTimers();
+    const setup = setupDashboard();
+    dashboard = setup.dashboard;
+    onNavigate = setup.onNavigate;
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  beforeEach(async () => {
+    await setupBillForm(dashboard);
+  });
+
+  test("Then admin can accept a pending bill", async () => {
+    const updateMock = jest.fn(() => Promise.resolve({}));
+    jest.spyOn(mockStore, "bills").mockReturnValue({
+      list: () => Promise.resolve(bills),
+      update: updateMock,
+    });
+
+    const commentaryInput = document.querySelector("#commentary2");
+    fireEvent.change(commentaryInput, { target: { value: "Approved" } });
+
+    const acceptButton = screen.getByTestId("btn-accept-bill-d");
+    fireEvent.click(acceptButton);
+
+    await waitFor(() => {
+      expect(updateMock).toHaveBeenCalled();
+      const callData = JSON.parse(updateMock.mock.calls[0][0].data);
+      expect(callData.status).toBe("accepted");
+      expect(callData.commentAdmin).toBe("Approved");
+      expect(onNavigate).toHaveBeenCalledWith(ROUTES_PATH.Dashboard);
+    });
+  });
+});
+
+describe("Given I am connected as an Admin - handleRefuseSubmit", () => {
+  let dashboard;
+  let onNavigate;
+
+  beforeEach(() => {
+    jest.useFakeTimers();
+    const setup = setupDashboard();
+    dashboard = setup.dashboard;
+    onNavigate = setup.onNavigate;
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  beforeEach(async () => {
+    await setupBillForm(dashboard);
+  });
+
+  test("Then admin can refuse a pending bill", async () => {
+    const updateMock = jest.fn(() => Promise.resolve({}));
+    jest.spyOn(mockStore, "bills").mockReturnValue({
+      list: () => Promise.resolve(bills),
+      update: updateMock,
+    });
+
+    const commentaryInput = document.querySelector("#commentary2");
+    fireEvent.change(commentaryInput, { target: { value: "Rejected" } });
+
+    const refuseButton = screen.getByTestId("btn-refuse-bill-d");
+    fireEvent.click(refuseButton);
+
+    await waitFor(() => {
+      expect(updateMock).toHaveBeenCalled();
+      const callData = JSON.parse(updateMock.mock.calls[0][0].data);
+      expect(callData.status).toBe("refused");
+      expect(callData.commentAdmin).toBe("Rejected");
+      expect(onNavigate).toHaveBeenCalledWith(ROUTES_PATH.Dashboard);
+    });
+  });
+});
+
 describe("Given I am connected as an Employee", () => {
   describe("Bill Filtering", () => {
     test("should not display own bills when filtering", () => {

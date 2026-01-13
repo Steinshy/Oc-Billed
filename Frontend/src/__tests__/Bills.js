@@ -267,6 +267,27 @@ describe("Given I am connected as an employee", () => {
       fireEvent.click(buttonNewBill);
       expect(onNavigate).toHaveBeenCalledWith(ROUTES_PATH["NewBill"]);
     });
+
+    test("Then Bills constructor should handle missing eye icons gracefully", () => {
+      const onNavigate = jest.fn();
+      // Create minimal HTML without eye icons
+      document.body.innerHTML = `
+        <div id="root">
+          <div class="container">
+            <button data-testid="btn-new-bill">Nouvelle note de frais</button>
+            <table>
+              <tbody data-testid="tbody">
+                <tr><td>test</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+      // This should not throw even though there are no eye icons
+      expect(() => {
+        new Bills({ document, onNavigate, store: null, localStorage: localStorageMock });
+      }).not.toThrow();
+    });
   });
 });
 

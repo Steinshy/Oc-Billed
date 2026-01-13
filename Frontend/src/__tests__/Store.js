@@ -1,5 +1,8 @@
 import Store from "../app/Store.js";
 
+const MOCK_JWT_TOKEN = "mock-jwt-token";
+const HTTP_LOCALHOST_PORT = "http://localhost:5678";
+
 describe("Given I am using the API Store", () => {
   let originalFetch;
   let originalLocalStorage;
@@ -39,7 +42,7 @@ describe("Given I am using the API Store", () => {
       const result = await Store.login(credentials);
 
       expect(global.fetch).toHaveBeenCalledWith(
-        "http://localhost:5678/auth/login",
+        `${HTTP_LOCALHOST_PORT}/auth/login`,
         expect.any(Object),
       );
 
@@ -73,7 +76,7 @@ describe("Given I am using the API Store", () => {
         { id: "2", amount: 200, date: "2023-01-02" },
       ];
 
-      window.localStorage.getItem.mockReturnValue("mock-jwt-token");
+      window.localStorage.getItem.mockReturnValue(MOCK_JWT_TOKEN);
       global.fetch = jest.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.resolve(mockBills),
@@ -82,13 +85,13 @@ describe("Given I am using the API Store", () => {
       const result = await Store.bills().list();
 
       expect(global.fetch).toHaveBeenCalledWith(
-        "http://localhost:5678/bills",
+        `${HTTP_LOCALHOST_PORT}/bills`,
         expect.any(Object),
       );
 
       const fetchCall = global.fetch.mock.calls[0];
       expect(fetchCall[1].method).toBe("GET");
-      expect(fetchCall[1].headers.Authorization).toBe("Bearer mock-jwt-token");
+      expect(fetchCall[1].headers.Authorization).toBe(`Bearer ${MOCK_JWT_TOKEN}`);
       expect(fetchCall[1].headers["Content-Type"]).toBe("application/json");
       expect(result).toEqual(mockBills);
       expect(result.length).toBe(2);
@@ -117,7 +120,7 @@ describe("Given I am using the API Store", () => {
         date: "2023-01-03",
       };
 
-      window.localStorage.getItem.mockReturnValue("mock-jwt-token");
+      window.localStorage.getItem.mockReturnValue(MOCK_JWT_TOKEN);
       global.fetch = jest.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.resolve(newBill),
@@ -127,14 +130,14 @@ describe("Given I am using the API Store", () => {
       const result = await Store.bills().create({ data: billData });
 
       expect(global.fetch).toHaveBeenCalledWith(
-        "http://localhost:5678/bills",
+        `${HTTP_LOCALHOST_PORT}/bills`,
         expect.any(Object),
       );
 
       const fetchCall = global.fetch.mock.calls[0];
       expect(fetchCall[1].method).toBe("POST");
       expect(fetchCall[1].body).toBe(billData);
-      expect(fetchCall[1].headers.Authorization).toBe("Bearer mock-jwt-token");
+      expect(fetchCall[1].headers.Authorization).toBe(`Bearer ${MOCK_JWT_TOKEN}`);
       expect(fetchCall[1].headers["Content-Type"]).toBe("application/json");
       expect(result).toEqual(newBill);
     });
@@ -148,7 +151,7 @@ describe("Given I am using the API Store", () => {
         type: "Restaurant",
       };
 
-      window.localStorage.getItem.mockReturnValue("mock-jwt-token");
+      window.localStorage.getItem.mockReturnValue(MOCK_JWT_TOKEN);
       global.fetch = jest.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.resolve(updatedBill),
@@ -161,14 +164,14 @@ describe("Given I am using the API Store", () => {
       });
 
       expect(global.fetch).toHaveBeenCalledWith(
-        "http://localhost:5678/bills/1",
+        `${HTTP_LOCALHOST_PORT}/bills/1`,
         expect.any(Object),
       );
 
       const fetchCall = global.fetch.mock.calls[0];
       expect(fetchCall[1].method).toBe("PATCH");
       expect(fetchCall[1].body).toBe(billData);
-      expect(fetchCall[1].headers.Authorization).toBe("Bearer mock-jwt-token");
+      expect(fetchCall[1].headers.Authorization).toBe(`Bearer ${MOCK_JWT_TOKEN}`);
       expect(fetchCall[1].headers["Content-Type"]).toBe("application/json");
       expect(result).toEqual(updatedBill);
     });
@@ -176,7 +179,7 @@ describe("Given I am using the API Store", () => {
 
   describe("When I delete a bill", () => {
     test("Then it should send DELETE request with bill ID", async () => {
-      window.localStorage.getItem.mockReturnValue("mock-jwt-token");
+      window.localStorage.getItem.mockReturnValue(MOCK_JWT_TOKEN);
       global.fetch = jest.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({ success: true }),
@@ -185,13 +188,13 @@ describe("Given I am using the API Store", () => {
       const result = await Store.bills().delete({ selector: "1" });
 
       expect(global.fetch).toHaveBeenCalledWith(
-        "http://localhost:5678/bills/1",
+        `${HTTP_LOCALHOST_PORT}/bills/1`,
         expect.any(Object),
       );
 
       const fetchCall = global.fetch.mock.calls[0];
       expect(fetchCall[1].method).toBe("DELETE");
-      expect(fetchCall[1].headers.Authorization).toBe("Bearer mock-jwt-token");
+      expect(fetchCall[1].headers.Authorization).toBe(`Bearer ${MOCK_JWT_TOKEN}`);
       expect(result.success).toBe(true);
     });
   });
@@ -200,7 +203,7 @@ describe("Given I am using the API Store", () => {
     test("Then it should send GET request to /bills/{id}", async () => {
       const mockBill = { id: "1", amount: 100, type: "Transport" };
 
-      window.localStorage.getItem.mockReturnValue("mock-jwt-token");
+      window.localStorage.getItem.mockReturnValue(MOCK_JWT_TOKEN);
       global.fetch = jest.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.resolve(mockBill),
@@ -209,13 +212,13 @@ describe("Given I am using the API Store", () => {
       const result = await Store.bill("1");
 
       expect(global.fetch).toHaveBeenCalledWith(
-        "http://localhost:5678/bills/1",
+        `${HTTP_LOCALHOST_PORT}/bills/1`,
         expect.any(Object),
       );
 
       const fetchCall = global.fetch.mock.calls[0];
       expect(fetchCall[1].method).toBe("GET");
-      expect(fetchCall[1].headers.Authorization).toBe("Bearer mock-jwt-token");
+      expect(fetchCall[1].headers.Authorization).toBe(`Bearer ${MOCK_JWT_TOKEN}`);
       expect(result).toEqual(mockBill);
     });
   });
@@ -228,7 +231,7 @@ describe("Given I am using the API Store", () => {
         type: "Employee",
       };
 
-      window.localStorage.getItem.mockReturnValue("mock-jwt-token");
+      window.localStorage.getItem.mockReturnValue(MOCK_JWT_TOKEN);
       global.fetch = jest.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.resolve(mockUser),
@@ -237,7 +240,7 @@ describe("Given I am using the API Store", () => {
       const result = await Store.user("user123");
 
       expect(global.fetch).toHaveBeenCalledWith(
-        "http://localhost:5678/users/user123",
+        `${HTTP_LOCALHOST_PORT}/users/user123`,
         expect.any(Object),
       );
 
@@ -253,7 +256,7 @@ describe("Given I am using the API Store", () => {
         name: "New User",
       };
 
-      window.localStorage.getItem.mockReturnValue("mock-jwt-token");
+      window.localStorage.getItem.mockReturnValue(MOCK_JWT_TOKEN);
       global.fetch = jest.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.resolve(newUser),
@@ -263,7 +266,7 @@ describe("Given I am using the API Store", () => {
       const result = await Store.users().create({ data: userData });
 
       expect(global.fetch).toHaveBeenCalledWith(
-        "http://localhost:5678/users",
+        `${HTTP_LOCALHOST_PORT}/users`,
         expect.any(Object),
       );
 
@@ -276,7 +279,7 @@ describe("Given I am using the API Store", () => {
 
   describe("When API returns an error", () => {
     test("Then it should throw an error with the message from response", async () => {
-      window.localStorage.getItem.mockReturnValue("mock-jwt-token");
+      window.localStorage.getItem.mockReturnValue(MOCK_JWT_TOKEN);
       global.fetch = jest.fn().mockResolvedValue({
         ok: false,
         json: () => Promise.resolve({ message: "Server error occurred" }),
@@ -286,7 +289,7 @@ describe("Given I am using the API Store", () => {
     });
 
     test("Then it should handle network errors", async () => {
-      window.localStorage.getItem.mockReturnValue("mock-jwt-token");
+      window.localStorage.getItem.mockReturnValue(MOCK_JWT_TOKEN);
       global.fetch = jest.fn().mockRejectedValue(new Error("Network error"));
 
       await expect(Store.bills().list()).rejects.toThrow("Network error");
@@ -295,7 +298,7 @@ describe("Given I am using the API Store", () => {
 
   describe("When I use custom headers", () => {
     test("Then custom headers should be merged with default headers", async () => {
-      window.localStorage.getItem.mockReturnValue("mock-jwt-token");
+      window.localStorage.getItem.mockReturnValue(MOCK_JWT_TOKEN);
       global.fetch = jest.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.resolve([]),
@@ -306,13 +309,13 @@ describe("Given I am using the API Store", () => {
       });
 
       const fetchCall = global.fetch.mock.calls[0];
-      expect(fetchCall[1].headers.Authorization).toBe("Bearer mock-jwt-token");
+      expect(fetchCall[1].headers.Authorization).toBe(`Bearer ${MOCK_JWT_TOKEN}`);
       expect(fetchCall[1].headers["Content-Type"]).toBe("application/json");
       expect(fetchCall[1].headers["X-Custom-Header"]).toBe("custom-value");
     });
 
     test("Then noContentType flag should prevent Content-Type header", async () => {
-      window.localStorage.getItem.mockReturnValue("mock-jwt-token");
+      window.localStorage.getItem.mockReturnValue(MOCK_JWT_TOKEN);
       global.fetch = jest.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.resolve([]),

@@ -11,8 +11,6 @@ Backend/coverage/
 Backend/public
 Frontend/CLAUDE.md
 Frontend/node_modules
-Frontend/coverage
 Frontend/.idea
 Frontend/.stryker-tmp
-Frontend/test-report.html
-Frontend/reports
+.serena
